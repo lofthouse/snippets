@@ -1,39 +1,24 @@
 function closestSequence2(a, b) {
-    var len=a.length;
+    var a_len=a.length;
+    var b_len=b.length;
     var i=0;
-    var b_prime=[];
+    var j=0;
+    var diff_table=[];
+    var diff=0;
 
-    if (b.length == len) {
-        return diff(a,b);
-    } else {
-        var min=0;
-        var min_candidate=0;
+    for (k=0; k<=a_len; k++)
+        diff_table[k]=[];
+    for (k=0; k<=b_len; k++)
+        diff_table[0][k]=0;
 
-        for (i=0; i<b.length; i++) {
-            var head=b.slice(0,i);
-            var tail=b.slice(i+1,b.length);
-            var b_prime_candidate=head.concat(tail);
-            if (i == 0) {
-                min=closestSequence2(a,b_prime_candidate);
-                b_prime=b_prime_candidate;
-            } else {
-                min_candidate=closestSequence2(a,b_prime_candidate);
-                if( min_candidate<min ) {
-                    min=min_candidate;
-                    b_prime=b_prime_candidate;
-                }
-            }
+    for (i=1; i<=a_len; i++) {
+        for (j=i; j<=b_len; j++) {
+            diff=Math.abs(b[j-1]-a[i-1]);
+            if (i == j)
+                diff_table[i][j]=diff+diff_table[i-1][j-1];
+            else
+                diff_table[i][j]=Math.min(diff_table[i][j-1],diff_table[i-1][j-1]+diff);
         }
-        return min;
     }
-}
-
-function diff(a,b) {
-    var sum=0;
-    var i=0;
-
-    for (i=0; i<a.length; i++) {
-        sum+=Math.abs(a[i]-b[i]);
-    }
-    return sum;
+    return diff_table[a_len][b_len];
 }
