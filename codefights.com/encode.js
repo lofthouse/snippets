@@ -1,14 +1,12 @@
 encode = s => {
-    o='';
-    l=s[0];
-    for(c=i=1;i<=s.length;i++) {
-        if(s[i]==l)
-            c++;
-        else {
-            o+=l+c;
-            l=s[i];
-            c=1;
-        }
+    o=''
+    i=0
+    while (i<s.length) {
+        c=1
+        while(s[i]==s[i+c])
+                c++
+            o+=s[i]+c
+            i+=c
     }
-    return o;
+    return o
 }
