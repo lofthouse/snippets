@@ -16,14 +16,11 @@ rows=[]
 
 for line in content:
 	rows.append(map(int,line.split()))
-
 	if len(rows) == 3:
-		column = [ sorted(list(a)) for a in zip(*rows) ]
-		del rows[:]
-
-		for n in range(3):
-			if column[n][2] < (column[n][1] + column[n][0]):
+		for column in map(None,*rows):
+			if 2*max(column) < sum(column):
 				count += 1
+		del rows[:]
 
 print "There are",count,"possible triangles"
 
