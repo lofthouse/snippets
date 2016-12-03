@@ -12,20 +12,18 @@ with open(sys.argv[1]) as input_file:
 	content = input_file.read().splitlines()
 
 count=0
-sides=[[],[],[]]
-row=0
+rows=[]
 
 for line in content:
-	sides[row%3]=map(int,line.split())
+	rows.append(map(int,line.split()))
 
-	if row%3 == 2:
-		rotated = [ list(a) for a in zip(*sides[::-1]) ]
+	if len(rows) == 3:
+		column = [ sorted(list(a)) for a in zip(*rows) ]
+		del rows[:]
 
-		for testrow in range(3):
-			rotated[testrow].sort()
-			if rotated[testrow][2] < (rotated[testrow][1] + rotated[testrow][0]):
+		for n in range(3):
+			if column[n][2] < (column[n][1] + column[n][0]):
 				count += 1
-	row += 1
 
 print "There are",count,"possible triangles"
 
