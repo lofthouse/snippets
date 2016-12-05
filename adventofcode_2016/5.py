@@ -10,21 +10,27 @@ if  len(sys.argv) != 4 :
 input = sys.argv[1]
 zeroes = int(sys.argv[2])
 pwlength = int(sys.argv[3])
-password={}
-salt = 0
-end = '0'*zeroes
+
+salt = index = 0
+password = list('_'*pwlength)
 hash = '1'*pwlength
+valid_index = False
 
 for n in range(pwlength):
-	while hash[:zeroes] != end or not str.isdigit(hash[zeroes]) or int(hash[zeroes]) >= pwlength or hash[zeroes] in password :
+	# slightly easier to read condition and simpler password storage
+	while hash[:zeroes] != '0'*zeroes or not valid_index or password[index] != '_' :
 		salt += 1
 		hash = hashlib.md5( input + str(salt) ).hexdigest()
+		# has the unfortunate side affect of requiring more careful index handling
+		valid_index = str.isdigit(hash[zeroes]) and int(hash[zeroes]) < pwlength
+		if valid_index :
+			index=int(hash[zeroes])
 
-	password[hash[zeroes]]=hash[zeroes+1]
+	password[index]=hash[zeroes+1]
 
 	print "Found salt",salt
-	print "Password is now",''.join([value for (key,value) in sorted(password.items())])
+	print "Password is now",''.join(password)
 
-print "The password is",''.join([value for (key,value) in sorted(password.items())])
+print "The password is",''.join(password)
 
 sys.exit(0)
