@@ -30,12 +30,14 @@ for line in content:
 	for x in range(x0,x1+1) :
 		for y in range(y0,y1+1) :
 			if operation == 'on' :
-				grid[x][y] = 1
+				grid[x][y] += 1
 			if operation == 'off' :
-				grid[x][y] = 0
+				grid[x][y] -= 1
+				if grid[x][y] < 0 :
+					grid[x][y] = 0
 			if operation == 'toggle' :
-				grid[x][y] = 1 - grid[x][y]
+				grid[x][y] += 2
 
-print "There are",sum(sum(i) for i in grid),"lights lit"
+print "The total brightness is",sum(sum(i) for i in grid)
 
 sys.exit(0)
