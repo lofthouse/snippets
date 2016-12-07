@@ -15,64 +15,50 @@ def getinput(wires,gate):
 	else:
 		return wires[gate]
 
+def findSteadyState(wires,gates,wire):
+	hash=''
+	while hash != hashDict(wires) :
+		hash = hashDict(wires)
+		for gate in gates:
+			gate.tick(wires)
+	print "Wire",wire,"is",wires[wire]
 
-class ANDGate:
+class monoGate:
+	def __init__(self,in_A,out,wires):
+		self.in_A=in_A
+		self.out=out
+		wires[self.out]=0
+
+class biGate:
 	def __init__(self,in_A,in_B,out,wires):
 		self.in_A=in_A
 		self.in_B=in_B
 		self.out=out
 		wires[self.out]=0
 
+class ANDGate(biGate):
 	def tick(self,wires):
 		wires[self.out] = getinput(wires,self.in_A) & getinput(wires,self.in_B)
 
-class ORGate:
-	def __init__(self,in_A,in_B,out,wires):
-		self.in_A=in_A
-		self.in_B=in_B
-		self.out=out
-		wires[self.out]=0
-
+class ORGate(biGate):
 	def tick(self,wires):
 		wires[self.out] = getinput(wires,self.in_A) | getinput(wires,self.in_B)
 
-class LSHIFTGate:
-	def __init__(self,input,shift,out,wires):
-		self.input=input
-		self.shift=shift
-		self.out=out
-		wires[self.out]=0
-
+class LSHIFTGate(biGate):
 	def tick(self,wires):
-		wires[self.out] = getinput(wires,self.input) << self.shift
+		wires[self.out] = getinput(wires,self.in_A) << self.in_B
 
-class RSHIFTGate:
-	def __init__(self,input,shift,out,wires):
-		self.input=input
-		self.shift=shift
-		self.out=out
-		wires[self.out]=0
-
+class RSHIFTGate(biGate):
 	def tick(self,wires):
-		wires[self.out] = getinput(wires,self.input) >> self.shift
+		wires[self.out] = getinput(wires,self.in_A) >> self.in_B
 
-class NOTGate:
-	def __init__(self,input,out,wires):
-		self.input=input
-		self.out=out
-		wires[self.out]=0
-
+class NOTGate(monoGate):
 	def tick(self,wires):
-		wires[self.out] = 65536 - getinput(wires,self.input) - 1
+		wires[self.out] = 65536 - getinput(wires,self.in_A) - 1
 
-class ASSIGNGate:
-	def __init__(self,input,out,wires):
-		self.input=input
-		self.out=out
-		wires[self.out]=0
-
+class ASSIGNGate(monoGate):
 	def tick(self,wires):
-		wires[self.out]=getinput(wires,self.input)
+		wires[self.out]=getinput(wires,self.in_A)
 
 
 with open(sys.argv[1]) as input_file:
@@ -80,8 +66,6 @@ with open(sys.argv[1]) as input_file:
 
 gates=[]
 wires={}
-hash=''
-ticks=0
 
 for line in content:
 	if not line :
@@ -100,16 +84,7 @@ for line in content:
 	else :
 		gates.append(ASSIGNGate(parse[0],parse[2],wires))
 
-while hash != hashDict(wires) :
-	hash = hashDict(wires)
-	ticks += 1
-	for gate in gates:
-		gate.tick(wires)
-
-print "That took",ticks,"ticks"
-print "Wire a is",wires['a']
-print "Wire b is",wires['b']
-print
+findSteadyState(wires,gates,'a')
 
 gates = [ gate for gate in gates if not gate.out == 'b' ]
 
@@ -118,15 +93,6 @@ gates.append(ASSIGNGate(str(wires['a']),'b',wires))
 for key in wires:
 	wires[key]=0
 
-ticks=0
-while hash != hashDict(wires) :
-	hash = hashDict(wires)
-	ticks += 1
-	for gate in gates:
-		gate.tick(wires)
-
-print "That took",ticks,"ticks"
-print "Wire a is",wires['a']
-print "Wire b is",wires['b']
+findSteadyState(wires,gates,'a')
 
 sys.exit(0)
