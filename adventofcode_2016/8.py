@@ -3,23 +3,21 @@
 import sys
 import os
 import time
+import numpy as np
 
-x=50
-y=6
+cols=50
+rows=6
 
 def print_panel():
 	tmp=os.system('clear')
-	for j in range(y):
-		for i in range(x):
+	for i in range(rows):
+		for j in range(cols):
 			if panel[i][j]:
 				print '#',
 			else:
 				print ' ',
 		print
 	time.sleep(0.02)
-
-def rotate(row,shift):
-	return row[-int(shift):]+row[:-int(shift)]
 
 if  len(sys.argv) != 2 or not os.path.isfile(sys.argv[1]) :
 	print "Invalid argument"
@@ -28,7 +26,7 @@ if  len(sys.argv) != 2 or not os.path.isfile(sys.argv[1]) :
 with open(sys.argv[1]) as input_file:
 	content = input_file.read().splitlines()
 
-panel=[[0 for j in range(6)] for i in range(50)]
+panel=np.zeros((rows,cols), dtype=bool)
 
 print_panel()
 
@@ -36,21 +34,18 @@ for line in content:
 	buffer=line.split()
 	if buffer[0]=='rect':
 		coords=buffer[1].split('x')
-		for i in range(int(coords[0])):
-			for j in range(int(coords[1])):
+		for i in range(int(coords[1])):
+			for j in range(int(coords[0])):
 				panel[i][j]=1
 	if buffer[0]=='rotate':
+		ind=int(buffer[2].split('=')[-1])
+		mag=int(buffer[4])
 		if buffer[1]=='row':
-			r=int(buffer[2][-1])
-			row=[ panel[i][r] for i in range(x) ]
-			row=rotate(row,buffer[4])
-			for i in range(x):
-				panel[i][r]=row[i]
+			panel[ind]=np.roll(panel[ind],mag)
 		else: #column
-			col=int(buffer[2].split('=')[-1])
-			panel[col]=rotate(panel[col],buffer[4])
+			panel[:,ind]=np.roll(panel[:,ind],mag)
 	print_panel()
 
-print "That took",sum(sum(panel,[])),"pixels"
+print "That took",np.sum(panel),"pixels"
 
 sys.exit(0)
