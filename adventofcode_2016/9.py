@@ -5,7 +5,6 @@ import os.path
 import re
 
 instruction=re.compile('\([0-9]+x[0-9]+\)')
-output=''
 
 if  len(sys.argv) != 2 or not os.path.isfile(sys.argv[1]) :
 	print "Invalid argument"
