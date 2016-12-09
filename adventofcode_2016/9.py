@@ -14,29 +14,17 @@ if  len(sys.argv) != 2 or not os.path.isfile(sys.argv[1]) :
 with open(sys.argv[1]) as input_file:
 	content = input_file.read().splitlines()
 
-for line in content:
-	output=''
-#	print
-#	print "New Line:",line
-	while line:
-#		print "In:",line
-#		print "Out:",output
-		next_ins=instruction.search(line)
-		if next_ins:
-			ins=next_ins.group(0)
-			start,end = next_ins.span()
-#			print "Found instruction",ins
-			output += line[0:start]
-			line = line[end:]
-			n,c=map(int,ins.strip('()').split('x'))
-			output += line[0:n]*c
-			line = line[n:]
-		else:
-			output += line
-#			print "Copied rest of line"
-			line=''
+def decoded_length(line):
+	next_ins=instruction.search(line)
+	if next_ins:
+		ins=next_ins.group(0)
+		start,end = next_ins.span()
+		n,c=map(int,ins.strip('()').split('x'))
+		return len(line[0:start]) + c*decoded_length(line[end:end+n]) + decoded_length(line[end+n:])
+	else:
+		return len(line)
 
-#	print "The output is", output, "and is", len(output), "characters long"
-	print "The output is", len(output), "characters long"
+for line in content:
+	print "The output is", decoded_length(line), "characters long"
 
 sys.exit(0)
