@@ -59,32 +59,56 @@ def moves_from(state):
 	ms=[ x for x in ms if x ] # strip empty entries
 	gms=[ state[state[E]] & x for x in gm_list ] # all generator-microchip pairs on the floor
 	gms=[ x for x in gms if x in gm_list ] # strip invalid entries
-	# Pair interchangeability optimization
-#	if len(gms) > 1:
-#		gms=[ gms[0] ]
 
 	moves=[]
 	moves += [ x[0] for x in combinations(gs,1) ]  # 1 generator
 	moves += [ x|y for x,y in combinations(gs,2) ] # 2 generators
 	moves += [ x[0] for x in combinations(ms,1) ]  # 1 microchip
 	moves += [ x|y for x,y in combinations(ms,2) ] # 2 microchips
-	moves += gms                                   # generator-microchip pairs
 	# create tuples with the direction of the movement
 
 	moves = [ (x,1) for x in moves ] + [ (x,-1) for x in moves ]
 	valid_moves=[ x for x in moves if valid_move(x,state) ]
 
+
+	gm_up_moves = [ (x,1) for x in gms if valid_move( (x,1), state) ]
+	gm_dn_moves = [ (x,-1) for x in gms if valid_move( (x,-1), state) ]
+
+	# Pair interchangeability optimization
+#	if len(gms) > 1:
+#		gms=[ gms[0] ]
+
+
+	# returned states are tuples of state and equivalent states
 	states=[]
 	for move in valid_moves:
-		new_state=list(state)
-		floor = state[E]
-		new_state[floor] -= move[0]
-		floor = state[E] + move[1]
-		new_state[floor] += move[0]
-		new_state[E] = floor
-		states.append(new_state)
+		states.append( ( state_from(move,state), None ) )
+
+	if len(gm_up_moves) == 1:
+		states.append( ( state_from(gm_up_moves[0],state), None ) )
+	else:
+		for move in gm_up_moves[1:]:
+			states.append( ( state_from(move,state), state_from(gm_up_moves[0],state) ) )
+
+	if len(gm_dn_moves) == 1:
+		states.append( ( state_from(gm_dn_moves[0],state), None ) )
+	else:
+		for move in gm_dn_moves[1:]:
+			states.append( ( state_from(move,state), state_from(gm_dn_moves[0],state) ) )
 
 	return states
+
+def state_from(move,state):
+	global E
+
+	new_state=list(state)
+	floor = state[E]
+	new_state[floor] -= move[0]
+	floor = state[E] + move[1]
+	new_state[floor] += move[0]
+	new_state[E] = floor
+
+	return new_state
 
 def valid_move(move,state):
 	global g_mask,m_mask
@@ -144,14 +168,17 @@ def solve(state,depth):
 	index=0
 	winner=0
 	for candidate in new_states:
-		tmp=solve(candidate,depth+1)
+		# if this candidate is not identical to a previous, solve it
+#		if not candidate[1]:
+		tmp=solve(candidate[0],depth+1)
 		if tmp < moves:
 			moves=tmp
 			winner=index
 		index += 1
 #		moves=min(solve(candidate),moves)
 
-	solves[my_hash]=[ moves, depth, new_states[winner], hash(new_states[winner]) ]
+	solves[my_hash]=[ moves, depth, new_states[winner][0], hash(new_states[winner][0]) ]
+
 	return 1+moves
 
 # Pre-seed our end state
