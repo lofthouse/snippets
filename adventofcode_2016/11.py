@@ -82,19 +82,19 @@ def moves_from(state):
 	# returned states are tuples of state and equivalent states
 	states=[]
 	for move in valid_moves:
-		states.append( ( state_from(move,state), None ) )
+		states.append( ( state_from(move,state), False ) )
 
-	if len(gm_up_moves) == 1:
-		states.append( ( state_from(gm_up_moves[0],state), None ) )
-	else:
+	if gm_up_moves:
+		states.append( ( state_from(gm_up_moves[0],state), False ) )
+	if len(gm_up_moves) > 1:
 		for move in gm_up_moves[1:]:
-			states.append( ( state_from(move,state), state_from(gm_up_moves[0],state) ) )
+			states.append( ( state_from(move,state), True ) )
 
-	if len(gm_dn_moves) == 1:
-		states.append( ( state_from(gm_dn_moves[0],state), None ) )
-	else:
+	if gm_dn_moves:
+		states.append( ( state_from(gm_dn_moves[0],state), False ) )
+	if len(gm_dn_moves) > 1:
 		for move in gm_dn_moves[1:]:
-			states.append( ( state_from(move,state), state_from(gm_dn_moves[0],state) ) )
+			states.append( ( state_from(move,state), True ) )
 
 	return states
 
@@ -165,15 +165,20 @@ def solve(state,depth):
 	if not new_states:
 		return max_moves
 
-	index=0
-	winner=0
+	equiv=index=winner=0
+	candidate_moves=[]
 	for candidate in new_states:
 		# if this candidate is not identical to a previous, solve it
-#		if not candidate[1]:
-		tmp=solve(candidate[0],depth+1)
-		if tmp < moves:
-			moves=tmp
-			winner=index
+		if not candidate[1]:
+			equiv=index
+			candidate_moves.append( solve(candidate[0],depth+1) )
+			if candidate_moves[index] < moves:
+				moves=candidate_moves[index]
+				winner=index
+		else:
+			candidate_moves.append( candidate_moves[equiv] )
+			solves[ hash(candidate[0]) ] = solves[ hash(new_states[equiv][0]) ]
+
 		index += 1
 #		moves=min(solve(candidate),moves)
 
