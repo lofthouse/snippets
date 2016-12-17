@@ -24,6 +24,7 @@ m_list=[Am,Bm,Cm,Dm,Em]
 gm_list=[Ag|Am,Bg|Bm,Cg|Cm,Dg|Dm,Eg|Em]
 
 max_moves=sys.maxint
+max_depth=500
 
 # States are bitwise OR of present devices arranged as a list (floors 0=>3) of lists (generator,chips)
 if len(sys.argv) == 2 and sys.argv[1] == 'test':
@@ -157,7 +158,11 @@ def solve(state,depth):
 	if my_hash in solves:
 		return 1 + solves[my_hash][0]
 
-	moves=max_moves
+	if depth > max_depth:
+		solves[my_hash]=[ max_moves, depth, None, None ]
+		return max_moves
+
+	best_moves=max_moves
 	# pre-define this solve as max_moves so children don't try to resolve it
 	solves[my_hash]=[ max_moves, depth, None, None ]
 
@@ -166,25 +171,22 @@ def solve(state,depth):
 		return max_moves
 
 	equiv=index=winner=0
-	candidate_moves=[]
-	for candidate in new_states:
-		# if this candidate is not identical to a previous, solve it
-		if not candidate[1]:
+	for candidate, same_as_previous in new_states:
+		# if this candidate is not equivalent to a previous, solve it
+		if not same_as_previous:
 			equiv=index
-			candidate_moves.append( solve(candidate[0],depth+1) )
-			if candidate_moves[index] < moves:
-				moves=candidate_moves[index]
+			candidate_moves = solve( candidate, depth+1 )
+			if candidate_moves < best_moves:
+				best_moves=candidate_moves
 				winner=index
 		else:
-			candidate_moves.append( candidate_moves[equiv] )
-			solves[ hash(candidate[0]) ] = solves[ hash(new_states[equiv][0]) ]
+			solves[ hash(candidate) ] = solves[ hash(new_states[equiv][0]) ]
 
 		index += 1
-#		moves=min(solve(candidate),moves)
 
-	solves[my_hash]=[ moves, depth, new_states[winner][0], hash(new_states[winner][0]) ]
+	solves[my_hash]=[ best_moves, depth, new_states[winner][0], hash(new_states[winner][0]) ]
 
-	return 1+moves
+	return 1+best_moves
 
 # Pre-seed our end state
 solves[hash(end)]=[0,999,end,None]
@@ -198,5 +200,9 @@ step=hash(state)
 while solves[step][3]:
 	print "Step",solves[step][0],"(depth",solves[step][1],"):",solves[step][2]
 	step=solves[step][3]
+
+#for x in solves:
+#	if not x[2]:
+#		resolve = solves
 
 sys.exit(0)
