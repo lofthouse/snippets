@@ -2,7 +2,8 @@
 
 import sys
 import hashlib
-from itertools import chain,combinations
+from heapq import heapify,heappop,heappush
+from itertools import combinations
 import json
 
 Ag=1<<1
@@ -24,9 +25,9 @@ m_list=[Am,Bm,Cm,Dm,Em]
 gm_list=[Ag|Am,Bg|Bm,Cg|Cm,Dg|Dm,Eg|Em]
 
 max_moves=sys.maxint
-max_depth=500
+explorations=0
 
-# States are bitwise OR of present devices arranged as a list (floors 0=>3) of lists (generator,chips)
+# States are bitwise OR of present devices arranged as a list (floors 0=>3).  list[0] is elevator location.
 if len(sys.argv) == 2 and sys.argv[1] == 'test':
 	state=[ 1,
 			Am|Bm,
@@ -44,7 +45,10 @@ else:
 
 # Elevator (index into state)
 E=0
-solves={}
+
+to_visit=[(0,state)]
+heapify( to_visit )
+visited=[]
 
 def hash(state):
 	# using hexdigest for possible debugging:  binary digest should be safe in this environment
@@ -52,6 +56,7 @@ def hash(state):
 
 def moves_from(state):
 	global E
+	global visited
 
 	# what is elegible to move (on the floor with the elevator)?
 	gs=[ state[state[E]] & x for x in g_list ] # all generators on the floor
@@ -83,19 +88,19 @@ def moves_from(state):
 	# returned states are tuples of state and equivalent states
 	states=[]
 	for move in valid_moves:
-		states.append( ( state_from(move,state), False ) )
+		states.append( state_from(move,state) )
 
 	if gm_up_moves:
-		states.append( ( state_from(gm_up_moves[0],state), False ) )
+		states.append( state_from(gm_up_moves[0],state) )
 	if len(gm_up_moves) > 1:
 		for move in gm_up_moves[1:]:
-			states.append( ( state_from(move,state), True ) )
+			visited.append( state_from(move,state) )
 
 	if gm_dn_moves:
-		states.append( ( state_from(gm_dn_moves[0],state), False ) )
+		states.append( state_from(gm_dn_moves[0],state) )
 	if len(gm_dn_moves) > 1:
 		for move in gm_dn_moves[1:]:
-			states.append( ( state_from(move,state), True ) )
+			visited.append( state_from(move,state) )
 
 	return states
 
@@ -149,60 +154,36 @@ def valid_move(move,state):
 				return False
 	return True
 
-def solve(state,depth):
-	global recursions
+def solve(state):
+	global explorations
+	global to_visit
+	global visited
+	moves = 0
 
-	recursions += 1
-	my_hash=hash(state)
+#	print to_visit
 
-	if my_hash in solves:
-		return 1 + solves[my_hash][0]
+	while to_visit:
+#		print "To Visit:",to_visit
+		moves,neighbor=heappop( to_visit )
+		visited.append( neighbor )
+#		print "Moves:",moves
+#		print "Neighbors:",neighbor
 
-	if depth > max_depth:
-		solves[my_hash]=[ max_moves, depth, None, None ]
-		return max_moves
+		new_states=moves_from( neighbor )
+#		print "New States:", new_states
 
-	best_moves=max_moves
-	# pre-define this solve as max_moves so children don't try to resolve it
-	solves[my_hash]=[ max_moves, depth, None, None ]
+		if end in new_states:
+			return moves + 1
 
-	new_states=moves_from(state)
-	if not new_states:
-		return max_moves
+		for next in new_states:
+			if not next in visited:
+				if not (moves+1,next) in to_visit:
+					heappush( to_visit, (moves+1,next) )
+					explorations += 1
 
-	equiv=index=winner=0
-	for candidate, same_as_previous in new_states:
-		# if this candidate is not equivalent to a previous, solve it
-		if not same_as_previous:
-			equiv=index
-			candidate_moves = solve( candidate, depth+1 )
-			if candidate_moves < best_moves:
-				best_moves=candidate_moves
-				winner=index
-		else:
-			solves[ hash(candidate) ] = solves[ hash(new_states[equiv][0]) ]
-
-		index += 1
-
-	solves[my_hash]=[ best_moves, depth, new_states[winner][0], hash(new_states[winner][0]) ]
-
-	return 1+best_moves
-
-# Pre-seed our end state
-solves[hash(end)]=[0,999,end,None]
-
-recursions=0
 print "Starting:", state
-print "%d moves needed to solve" % ( solve(state,0) - 1 )
-print "%d recursuions required" % recursions
-
-step=hash(state)
-while solves[step][3]:
-	print "Step",solves[step][0],"(depth",solves[step][1],"):",solves[step][2]
-	step=solves[step][3]
-
-#for x in solves:
-#	if not x[2]:
-#		resolve = solves
+#solve(state)
+print "%d moves needed to solve" % solve(state)
+print "%d explorations required" % explorations
 
 sys.exit(0)
