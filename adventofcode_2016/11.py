@@ -6,26 +6,31 @@ from heapq import heapify,heappop,heappush
 from itertools import combinations
 import json
 
-Ag=1<<1
-Bg=1<<2
-Cg=1<<3
-Dg=1<<4
-Eg=1<<5
-Am=1<<6
-Bm=1<<7
-Cm=1<<8
-Dm=1<<9
-Em=1<<10
+Am=1<<1
+Bm=1<<2
+Cm=1<<3
+Dm=1<<4
+Em=1<<5
+Fm=1<<6
+Gm=1<<7
 
-g_mask=Ag|Bg|Cg|Dg|Eg
-m_mask=Am|Bm|Cm|Dm|Em
+Ag=1<<8
+Bg=1<<9
+Cg=1<<10
+Dg=1<<11
+Eg=1<<12
+Fg=1<<13
+Gg=1<<14
 
-g_list=[Ag,Bg,Cg,Dg,Eg]
-m_list=[Am,Bm,Cm,Dm,Em]
-gm_list=[Ag|Am,Bg|Bm,Cg|Cm,Dg|Dm,Eg|Em]
+g_mask=Ag|Bg|Cg|Dg|Eg|Fg|Gg
+m_mask=Am|Bm|Cm|Dm|Em|Fm|Gm
 
-max_moves=sys.maxint
-explorations=0
+g_list=[Ag,Bg,Cg,Dg,Eg,Fg,Gg]
+m_list=[Am,Bm,Cm,Dm,Em,Fm,Gm]
+gm_list=[Ag|Am,Bg|Bm,Cg|Cm,Dg|Dm,Eg|Em,Fg|Fm,Gg|Gm]
+
+nodes_expanded=0
+nodes_skipped=0
 
 # States are bitwise OR of present devices arranged as a list (floors 0=>3).  list[0] is elevator location.
 if len(sys.argv) == 2 and sys.argv[1] == 'test':
@@ -35,24 +40,63 @@ if len(sys.argv) == 2 and sys.argv[1] == 'test':
 			Bg,
 			0 ]
 	end=[ 4, 0, 0, 0, Ag|Bg|Am|Bm ]
-else:
+elif len(sys.argv) == 2 and sys.argv[1] == '1':
 	state=[ 1,
 			Ag|Bg|Cg|Dg|Eg|Bm|Dm|Em,
 			Am|Cm,
 			0,
 			0 ]
 	end=[ 4, 0, 0, 0, Ag|Bg|Cg|Dg|Eg|Am|Bm|Cm|Dm|Em ]
+else:
+	state=[ 1,
+			Ag|Bg|Cg|Dg|Eg|Bm|Dm|Em|Fg|Fm|Gg|Gm,
+			Am|Cm,
+			0,
+			0 ]
+	end=[ 4, 0, 0, 0, Ag|Bg|Cg|Dg|Eg|Fg|Gg|Am|Bm|Cm|Dm|Em|Fm|Gm ]
 
 # Elevator (index into state)
 E=0
 
-to_visit=[(0,state)]
-heapify( to_visit )
-visited=[]
-
 def hash(state):
 	# using hexdigest for possible debugging:  binary digest should be safe in this environment
 	return hashlib.md5(json.dumps(state, sort_keys=True)).hexdigest()
+
+def pack(state):
+	# reduce a specific state to a fully-equivalent representation
+	# representation is tuple( elevator floor,
+	# GMs on 1, GMs on 2, GMs on 3, GMs on 4,
+	# 1-2 splits, 1-3 splits, 1-4 splits, 2-3 splits, 2-4 splits, 3-4 splits (g high),
+	# 1-2 splits, 1-3 splits, 1-4 splits, 2-3 splits, 2-4 splits, 3-4 splits (m high),
+	tmp=[state[0]]
+	for floor in (1,2,3,4):
+		count=0
+		for pair in gm_list:
+			if state[floor] & pair:
+				count += 1
+		tmp.append(count)
+
+	for x in combinations((1,2,3,4),2):
+		count=0
+		for m in m_list:
+			for g in g_list:
+				if state[x[0]] & m and state[x[1]] & g:
+					count += 1
+		tmp.append(count)
+
+	for x in combinations((1,2,3,4),2):
+		count=0
+		for g in g_list:
+			for m in m_list:
+				if state[x[0]] & g and state[x[1]] & m:
+					count += 1
+		tmp.append(count)
+
+	return tuple(tmp)
+
+#def unpack(state):
+#	return [
+
 
 def moves_from(state):
 	global E
@@ -80,27 +124,21 @@ def moves_from(state):
 	gm_up_moves = [ (x,1) for x in gms if valid_move( (x,1), state) ]
 	gm_dn_moves = [ (x,-1) for x in gms if valid_move( (x,-1), state) ]
 
-	# Pair interchangeability optimization
-#	if len(gms) > 1:
-#		gms=[ gms[0] ]
-
-
-	# returned states are tuples of state and equivalent states
 	states=[]
 	for move in valid_moves:
 		states.append( state_from(move,state) )
 
 	if gm_up_moves:
 		states.append( state_from(gm_up_moves[0],state) )
-	if len(gm_up_moves) > 1:
-		for move in gm_up_moves[1:]:
-			visited.append( state_from(move,state) )
+#	if len(gm_up_moves) > 1:
+#		for move in gm_up_moves[1:]:
+#			visited.add( pack(state_from(move,state)) )
 
 	if gm_dn_moves:
 		states.append( state_from(gm_dn_moves[0],state) )
-	if len(gm_dn_moves) > 1:
-		for move in gm_dn_moves[1:]:
-			visited.append( state_from(move,state) )
+#	if len(gm_dn_moves) > 1:
+#		for move in gm_dn_moves[1:]:
+#			visited.add( pack(state_from(move,state)) )
 
 	return states
 
@@ -137,7 +175,7 @@ def valid_move(move,state):
 			return False
 
 	for m in m_list:
-		my_g=m>>5
+		my_g=m<<7
 
 		# am I on the old floor?
 		floor = state[E]
@@ -155,17 +193,18 @@ def valid_move(move,state):
 	return True
 
 def solve(state):
-	global explorations
+	global nodes_expanded
+	global nodes_skipped
 	global to_visit
 	global visited
 	moves = 0
+	max_moves = 0
 
 #	print to_visit
 
 	while to_visit:
 #		print "To Visit:",to_visit
 		moves,neighbor=heappop( to_visit )
-		visited.append( neighbor )
 #		print "Moves:",moves
 #		print "Neighbors:",neighbor
 
@@ -176,14 +215,25 @@ def solve(state):
 			return moves + 1
 
 		for next in new_states:
-			if not next in visited:
-				if not (moves+1,next) in to_visit:
-					heappush( to_visit, (moves+1,next) )
-					explorations += 1
+			if not pack( next ) in visited:
+				visited.add( pack( next ) )
+				if not ( moves+1,next ) in to_visit:
+					heappush( to_visit, ( moves+1,next ) )
+					nodes_expanded += 1
+					if moves + 1 > max_moves:
+						max_moves += 1
+						print "Exploring %d move nodes" % max_moves
+			else:
+				nodes_skipped += 1
+
+to_visit=[(0,state)]
+heapify( to_visit )
+visited=set([])
 
 print "Starting:", state
 #solve(state)
 print "%d moves needed to solve" % solve(state)
-print "%d explorations required" % explorations
+print "%d nodes expanded" % nodes_expanded
+print "%d nodes skipped" % nodes_skipped
 
 sys.exit(0)
