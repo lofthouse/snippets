@@ -24,32 +24,29 @@ def printMap(h,v,d):
 		print
 
 def tryPoint(x,y,moves):
-	global visited,todo,end,d
+	global visited,reachable,todo,end,d
+
+	if moves>50:
+		return
 
 	here=(x,y)
 	if here in visited:
 		return
 	visited.add(here)
 
-	print "%d moves, checking out" % moves,here
-
-	if here == end:
-		print "We got there in %d moves" % moves
-		sys.exit(0)
-
 	if not isWall(x,y,d):
+		reachable.add(here)
 		heappush(todo,(moves,here))
 
-
-
 visited=set()
+reachable=set()
 todo=[]
 heapify(todo)
 
 start=(1,1)
-end=(31,39)
 
 heappush(todo,(0,start))
+reachable.add(start)
 printMap(40,50,d)
 
 while todo:
@@ -58,3 +55,5 @@ while todo:
 		tryPoint(new_x,y,moves+1)
 	for new_y in y-1,y+1:
 		tryPoint(x,new_y,moves+1)
+
+print "We reached %d points" % len(reachable)
