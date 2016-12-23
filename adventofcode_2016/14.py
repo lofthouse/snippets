@@ -33,6 +33,9 @@ last_index=None
 
 while True:
 	candidate = md5( salt + str(index) ).hexdigest()
+	for i in range(2016):
+		candidate = md5( candidate ).hexdigest()
+#	print "Candidate: %s" % candidate
 
 	triplet=hasRun( candidate, 3, False)
 	if triplet:
@@ -56,16 +59,10 @@ while True:
 						last_index=index
 					if candidates[0][0] > last_index:
 						keys.sort()
-						i=1
-						for a,b,c in keys:
-							print "%d: triplet at %d, pentlet at %d, %s" % (i,a,b,c)
-							i += 1
 						print "The 64th index was %d" % keys[63][0]
 						sys.exit(0)
 		# This set me back over an hour!
 		# If you remove inline, it changes the iteration and you end up SKIPPING valid candidates!!!!
 		while drops:
 			candidates.remove( drops.pop() )
-#			del drops[ (i,d) ]
-#		drops=set()
 	index += 1
