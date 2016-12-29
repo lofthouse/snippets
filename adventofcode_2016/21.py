@@ -2,20 +2,21 @@
 
 import sys
 import os.path
+from itertools import permutations
 
 if len(sys.argv) < 3:
 	print "Usage:  25.py <password to scramble> <instruction file>"
 	sys.exit(1)
 
-password=sys.argv[1]
+hashword=sys.argv[1]
 
 with open(sys.argv[2]) as input_file:
 	content = input_file.read().splitlines()
 
 content=[line.split() for line in content]
 
-def abort(line):
-	print "invalid command",line
+def abort(line,password):
+	print "invalid command",line,"while solving password",password
 	sys.exit(1)
 
 
@@ -46,7 +47,7 @@ def scramble(password,line):
 			password=password.replace(y,x)
 			password=password.replace('#',y)
 		else:
-			abort(line)
+			abort(line,password)
 
 	if cmd=='rotate':
 		if line[1]=='left':
@@ -55,11 +56,11 @@ def scramble(password,line):
 			password=rot_r(password,int(line[2]))
 		elif line[1]=='based':
 			index=password.index(line[6])
-			if not index:
-				abort(line)
+#			if index == False:
+#				abort(line,password)
 			password=rot_r(password,1+index+(0 if index < 4 else 1))
 		else:
-			abort(line)
+			abort(line,password)
 
 	if cmd=='reverse':
 		beg=int(line[2])
@@ -78,9 +79,16 @@ def scramble(password,line):
 
 	return password
 
-for line in content:
-	password=scramble(password,line)
+def solve(password):
+	for line in content:
+		password=scramble(password,line)
+	return password
 
-print password
+for clear in permutations('abcdefgh',8):
+	if hashword == solve(''.join(clear)):
+		print ''.join(clear)
+		sys.exit(0)
+
+print "Didn't find it!"
 
 sys.exit(0)
