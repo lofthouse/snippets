@@ -42,4 +42,28 @@ for A,B in product( [node for node in nodes], repeat=2 ):
 print "The grid is %d wide by %d tall" % (X,Y)
 print "There are %d viable pairs" % len(viable_pairs)
 
+
+for node in sorted(nodes.iterkeys()):
+	if nodes[node][1] == 0:
+		print '_',
+	elif node==(X-1,0):
+		print 'G',
+	elif node==(0,0):
+		print 'O',
+	elif nodes[node][1] > 75:
+		print '#',
+	else:
+		print '.',
+
+	if node[1] == Y-1:
+		print
+
+print '''
+69 moves to position empty in front of goal node
+5 moves to advance goal node 1 step towards origin and reposition empty
+31 total steps up required
+1 last step to move goal onto empty (at origin)
+69 + 5*31 + 1 = 225
+'''
+
 sys.exit(0)
