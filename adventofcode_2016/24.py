@@ -19,7 +19,6 @@ def loadMap():
 	with open(sys.argv[1]) as input_file:
 		content = input_file.read().splitlines()
 
-	x=0
 	walls=set()
 	checkpoints={}
 
@@ -44,9 +43,6 @@ def findDistances(X, Y, walls, checkpoints):
 		distance = shortestPath(X, Y, pair, walls, checkpoints)
 		result[ pair ] = distance
 		result[ pair[::-1] ] = distance
-		if graph:
-			print pair,":",distance
-			sleep(1)
 
 	return result
 
@@ -57,18 +53,31 @@ def movesFrom( location, walls , visited ):
 			result.append( candidate )
 	return result
 
-def printProgress( X, Y, walls, checkpoints, visited ):
-	os.system('clear')
+def printProgress( X, Y, pair, walls, checkpoints, visited, p_count ):
+	sys.stdout.write("\033[43m")
+	for x,y in visited:
+		sys.stdout.write("\033[%d;%dH " % (x+1,y+1))
+	sys.stdout.write("\033[0m")
 
-	for x in range(X):
-		for y in range(Y):
-			if (x,y) in walls:
-				sys.stdout.write('#')
-			elif (x,y) in visited:
-				sys.stdout.write('*')
-			else:
-				sys.stdout.write(' ')
-		sys.stdout.write('\n')
+	sys.stdout.write("\033[41;1m")
+	for point in pair:
+		x,y=checkpoints[ point ]
+		sys.stdout.write("\033[%d;%dH " % (x+1,y+1))
+	sys.stdout.write("\033[0m")
+	sys.stdout.write("\033[%d;0H" % (X+1) )
+
+	print "%d nodes processed" % len(visited),
+	sys.stdout.write("\033[0K\n")
+	print "%d jobs pruned" % p_count,
+	sys.stdout.write("\033[0K\n")
+
+def printWalls( X, Y, walls ):
+	os.system('clear')
+	sys.stdout.write("\033[47;1m")
+	for x,y in sorted(walls):
+		sys.stdout.write("\033[%d;%dH " % (x+1,y+1))
+	sys.stdout.write("\033[0m")
+	sys.stdout.write("\033[%d;0H" % (X+1) )
 
 def shortestPath( X, Y, pair, walls, checkpoints ):
 	global graph
@@ -82,6 +91,9 @@ def shortestPath( X, Y, pair, walls, checkpoints ):
 
 	heappush( todo, (0,0,checkpoints[ orig ]) )
 
+	if graph:
+		printWalls( X,Y,walls )
+
 	while todo:
 		_,cost,location=heappop( todo )
 		if location in visited:
@@ -90,15 +102,16 @@ def shortestPath( X, Y, pair, walls, checkpoints ):
 		visited.add( location )
 
 		if graph:
-			if len(visited) % 50 == 0:
-				printProgress(X, Y, walls, checkpoints, visited)
-				print "%d nodes processed" % len(visited)
-				print "%d jobs pruned" % p_count
-				sleep(0.05)
+			if len(visited) % 20 == 0:
+				printProgress(X, Y, pair, walls, checkpoints, visited, p_count)
+				sleep(0.03)
 
 		if location == checkpoints[ dest ]:
 			return cost
 		for new_location in movesFrom( location, walls , visited ):
+			if new_location[0] < 0:
+				print "ERROR"
+				raw_input()
 			heappush( todo, (cost+costEstimate( new_location, checkpoints[ dest ] ), cost+1, new_location ) )
 
 def main():
