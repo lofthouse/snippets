@@ -107,7 +107,7 @@ def main():
 	path_lengths={}
 
 	for path in permutations( range( 1, max(checkpoints)+1 ), max(checkpoints) ):
-		path = (0,)+path
+		path = (0,)+path+(0,)
 		length = 0
 		for i in range( len(path) - 1 ):
 			length += distances[ (path[i],path[i+1]) ]
