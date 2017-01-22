@@ -30,27 +30,25 @@ def main():
 	with open( sys.argv[1] ) as input_file:
 		content = input_file.read().splitlines()
 
-	happiness={}
+	happiness=defaultdict(lambda: defaultdict(int))
+	# We need some way to rigidly order the attendees for permutation
+	# That's why we can't just use happiness
 	attendees=[]
 
 	for line in content:
 		pieces = line.split()
 		attendee = pieces[0]
-
-		if attendee not in happiness:
-			happiness[attendee]=defaultdict(int)
+		points = -int(pieces[3]) if pieces[2] == 'lose' else int(pieces[3])
+		neighbor = pieces[10][:-1]
 
 		if attendee not in attendees:
 			attendees.append(attendee)
 
-		points = -int(pieces[3]) if pieces[2] == 'lose' else int(pieces[3])
-		neighbor = pieces[10][:-1]
 		happiness[attendee][neighbor] = points
 
 	print "The Happiest party is %d" % maximizeHappiness( attendees, happiness )
 
 	attendees.append('Me')
-	happiness['Me']=defaultdict(int)
 	print "The Happiest party with me is %d" % maximizeHappiness( attendees, happiness )
 
 
