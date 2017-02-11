@@ -23,28 +23,32 @@ def parseInput():
 	return transpose(array(ingredients))
 
 def score( recipe, ingredients, use_calories ):
-	if sum(recipe) != 100:
-		return 0
+	nutritional_value = array( [ max(0,sum(i)) for i in ingredients*recipe ] )
 
-	nutritional_value = [ sum(i) for i in ingredients*recipe ]
-	nutritional_value = array( [ max(0,i) for i in nutritional_value ] )
+	if use_calories:
+		if nutritional_value[-1] != 500:
+			return 0
 
-	if not use_calories:
-		nutritional_value = nutritional_value[:-1]
+	return prod(nutritional_value[:-1])
 
-	return -prod(nutritional_value)
+def optimize( ingredients, as_meal ):
+	max_score = 0
+
+	for a in range(101):
+		for b in range(101-a):
+			for c in range(101-(a+b)):
+				d = 100-(a+b+c)
+				n = score( (a,b,c,d), ingredients, as_meal )
+				if n > max_score:
+					max_score = n
+					max_recipe = (a,b,c,d)
+
+	print max_score,":",max_recipe
 
 def main():
 	ingredients = parseInput()
-	bnds = [ (0,100) for i in ingredients[0] ]
-
-	print ingredients
-	print bnds
-
-	res = brute(lambda x: score(x, ingredients, False), bnds, finish=None, Ns=50)
-	print res
-	print score( res, ingredients, False )
-
+	optimize( ingredients, False )
+	optimize( ingredients, True )
 
 if __name__=="__main__":
 	main()
