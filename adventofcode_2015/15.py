@@ -2,8 +2,8 @@
 
 import sys
 import os.path
+from re import findall
 from numpy import array,prod,transpose
-from scipy.optimize import brute
 
 def parseInput():
 	if  len( sys.argv ) != 2 or not os.path.isfile( sys.argv[1] ) :
@@ -16,8 +16,7 @@ def parseInput():
 	ingredients=[]
 
 	for line in content:
-		tmp = line.replace(',','').split()
-		tmp = [ tmp[2], tmp[4], tmp[6], tmp[8], tmp[10] ]
+		tmp = findall(r"-?[0-9]+",line)
 		ingredients.append( [ int(x) for x in tmp ] )
 
 	return transpose(array(ingredients))
@@ -38,17 +37,14 @@ def optimize( ingredients, as_meal ):
 		for b in range(101-a):
 			for c in range(101-(a+b)):
 				d = 100-(a+b+c)
-				n = score( (a,b,c,d), ingredients, as_meal )
-				if n > max_score:
-					max_score = n
-					max_recipe = (a,b,c,d)
+				max_score = max(max_score, score( (a,b,c,d), ingredients, as_meal ))
 
-	print max_score,":",max_recipe
+	return max_score
 
 def main():
 	ingredients = parseInput()
-	optimize( ingredients, False )
-	optimize( ingredients, True )
+	print "Best Cookie is", optimize( ingredients, False )
+	print "Best Meal is", optimize( ingredients, True )
 
 if __name__=="__main__":
 	main()
