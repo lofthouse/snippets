@@ -19,19 +19,12 @@ def readData():
 	with open(sys.argv[2]) as input_file:
 		content = input_file.read().splitlines()
 
-	t_reps=[]
-	nt_reps=[]
+	reps=[]
 
 	for line in content[:-2]:
-		if line[-2:] == "Ar":
-			t_reps.append( line.split(" => ") )
-		else:
-			nt_reps.append( line.split(" => ") )
+		reps.append( line.split(" => ") )
 
-	t_reps.sort(key=lambda v: len(v), reverse=True)
-	nt_reps.sort(key=lambda v: len(v), reverse=True)
-
-	return t_reps, nt_reps, content[-1], part
+	return reps, content[-1], part
 
 def react(seed,reps,reverse=False):
 	#	Theory of operation
@@ -58,13 +51,12 @@ def react(seed,reps,reverse=False):
 
 	return products
 
-def distill(molecule, t_reps, nt_reps):
+def distill(molecule, reps):
 	# Theory of operation:  Make most aggressive terminal reverse substitions first until none work
 	# Then make most aggressive non-terminal reverse subsitutions until none work
 	# repeat until you reach "e"
 	count = 0
 	fl=len(molecule)
-	reps=t_reps+nt_reps
 
 	while molecule != "e":
 		sl=fl+1
@@ -81,17 +73,16 @@ def distill(molecule, t_reps, nt_reps):
 	return count
 
 def main():
-	t_reps, nt_reps, molecule, part = readData()
+	reps, molecule, part = readData()
 
 	if part == 0:
 		return
 
 	if part == 1:
-		products = react(molecule,t_reps+nt_reps)
-		print "%d molecules can be created" % len(products)
+		print "%d molecules can be created" % len(react(molecule,reps))
 
 	if part == 2:
-		print "It took %d steps to make our molecule from 'e'" % distill(molecule, t_reps, nt_reps)
+		print "It took %d steps to make our molecule from 'e'" % distill(molecule,reps)
 
 if __name__ == '__main__':
 	main()
