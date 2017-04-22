@@ -2,7 +2,6 @@
 
 import sys
 import os.path
-from operator import itemgetter
 from pprint import pprint
 
 def usageAndExit():
@@ -28,6 +27,9 @@ def readData():
 			t_reps.append( line.split(" => ") )
 		else:
 			nt_reps.append( line.split(" => ") )
+
+	t_reps.sort(key=lambda v: len(v), reverse=True)
+	nt_reps.sort(key=lambda v: len(v), reverse=True)
 
 	return t_reps, nt_reps, content[-1], part
 
@@ -62,23 +64,13 @@ def distill(molecule, t_reps, nt_reps):
 	# repeat until you reach "e"
 	count = 0
 	fl=len(molecule)
+	reps=t_reps+nt_reps
 
 	while molecule != "e":
 		sl=fl+1
 		while fl<sl:
 			sl=fl
-			for x,y in t_reps:
-				skeleton = molecule.split(y)
-				if len(skeleton) > 1:
-					molecule = y.join(skeleton[:1])+x+y.join(skeleton[1:])
-					count += 1
-					fl = len(molecule)
-					break
-
-		sl=fl+1
-		while fl<sl:
-			sl=fl
-			for x,y in nt_reps:
+			for x,y in reps:
 				skeleton = molecule.split(y)
 				if len(skeleton) > 1:
 					molecule = y.join(skeleton[:1])+x+y.join(skeleton[1:])
