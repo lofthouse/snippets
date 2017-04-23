@@ -13,7 +13,7 @@ def readData():
 		usageAndExit()
 
 	part = int(sys.argv[1])
-	if part not in (0,1,2):
+	if part not in (1,2):
 		usageAndExit()
 
 	with open(sys.argv[2]) as input_file:
@@ -74,9 +74,6 @@ def distill(molecule, reps):
 
 def main():
 	reps, molecule, part = readData()
-
-	if part == 0:
-		return
 
 	if part == 1:
 		print "%d molecules can be created" % len(react(molecule,reps))
