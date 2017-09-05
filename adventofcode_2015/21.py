@@ -2,15 +2,38 @@
 
 import sys
 import os.path
+from pprint import pprint
+from ast import literal_eval
+from itertools import combinations
+
+DEBUG = False
 
 def loadData():
+    global DEBUG
+
     data = {}
+    data['player']={}
+    data['player']['Hit Points'] = 100
+    data['player']['Armor'] = 0
+    data['player']['Damage'] = 0
+
 
     # goal here is to allow input in any order and from as few or as many files as desired
     for arg in sys.argv[1:]:
         if not os.path.isfile(arg):
-            print "Invalid argument:  need list of input files"
-            sys.exit(1)
+            if arg.upper() == 'DEBUG':
+                DEBUG = True
+                continue
+            else:
+                argx = literal_eval(arg)
+                if isinstance(argx,tuple) and len(argx) == 3:
+                    data['player']['Hit Points'],data['player']['Damage'],data['player']['Armor'] = literal_eval(arg)
+                    continue
+                else:
+                    print "Invalid argument: " + arg
+                    print
+                    print "Usage: 21.py <input data file(s)> [player stat tuple in Hit Point, Damage, Armor order]"
+                    sys.exit(1)
 
         # inBlock = header found, processing block of values
         inBlock = False
@@ -39,7 +62,8 @@ def loadData():
                     else:
                         # Boss data is one per line
                         if block == 'boss':
-                            data[block][pieces[0]] = int( pieces[1] )
+                            # Annoying ":" at end of label go bye-bye
+                            data[block][pieces[0][:-1]] = int( pieces[1] )
                         # market data is columns matching column labels grabbed above
                         else:
                             if block == 'Rings':
@@ -54,7 +78,7 @@ def loadData():
 
     response = []
 
-    for requirement in ('boss','Weapons','Armor','Rings'):
+    for requirement in ('player','boss','Weapons','Armor','Rings'):
         if data.get(requirement) is None:
             print "Invalid input:  missing definition of %s" % requirement
             sys.exit(1)
@@ -64,14 +88,83 @@ def loadData():
 #    return ( data['boss'], data['Weapons'], data['Armor'], data['Rings'] )
     return tuple(response)
 
+def arm(player,bundle):
+    global DEBUG
+
+    cost = 0
+    powers = ('Armor','Damage')
+    package = ''
+
+    for goody in bundle:
+        cost += bundle[goody]['Cost']
+        package += goody + " "
+
+        for p in powers:
+            player[p] += bundle[goody][p]
+
+    return (cost,package)
+
+def attack(attacker, defender):
+    global DEBUG
+
+    damage = max(1,attacker['Damage'] - defender['Armor'])
+
+    defender['Hit Points'] -= damage
+
+def fight(player, boss):
+    attacker = player
+    defender = boss
+
+    while player['Hit Points'] > 0 and boss ['Hit Points'] > 0:
+        attack(attacker, defender)
+        temp = defender
+        defender = attacker
+        attacker = temp
+
+    return player['Hit Points'] > 0
+
 def main():
-    boss, weapons, armory, rings = loadData()
+    global DEBUG
 
-    print "Boss: ",boss
-    print "Weapons: ",weapons
-    print "Armory: ",armory
-    print "Rings: ",rings
+    lowest_cost = 99999
+    highest_cost = 0
+    player_orig, boss_orig, weapons, armory, ringery = loadData()
+    gamepieces = {'Player: ':player_orig,'Boss: ':boss_orig,'Weapons: ':weapons,'Armor: ':armory,'Rings: ':ringery}
 
+    if DEBUG:
+        for element in gamepieces:
+            print element
+            pprint( gamepieces[element] )
+
+    for weapon in weapons:
+        for arms in (0,1):
+            for armor in combinations(armory,arms):
+                for rings in (0,1,2):
+                    for ringset in combinations(ringery,rings):
+                        player = player_orig.copy()
+                        boss = boss_orig.copy()
+                        bundle = {}
+
+                        bundle[weapon]=weapons[weapon]
+                        for a in armor:
+                            bundle[a]=armory[a]
+                        for r in ringset:
+                            bundle[r]=ringery[r]
+
+                        cost,description = arm(player,bundle)
+                        if fight(player,boss):
+                            if cost < lowest_cost:
+                                lowest_cost = cost
+                                if DEBUG:
+                                    print "%d will buy you %s and victory" % (lowest_cost, description)
+                        else:
+                            if cost > highest_cost:
+                                highest_cost = cost
+                                if DEBUG:
+                                    print "%d will buy you %s and defeat" % (highest_cost, description)
+
+    print "The lowest cost for victory is %d" % lowest_cost
+    print "The highest cost for defeat is %d" % highest_cost
 
 if __name__=="__main__":
     main()
