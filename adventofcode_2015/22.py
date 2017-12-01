@@ -126,6 +126,19 @@ def main():
             print element
             pprint( gamepieces[element] )
 
+    # State:
+        # player
+        # boss
+        # spell queue
+
+    # create a costed tree
+    # initialize min winning cost with a very very large value
+    # load tree with each possible opening spell and the resulting state...
+    # While min cost in tree < min winning cost
+        # play the next possible moves
+            # execute spell queue
+            # if a winning state, update min winning cost
+
     return 0
 
     for weapon in weapons:
