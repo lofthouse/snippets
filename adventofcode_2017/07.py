@@ -20,20 +20,27 @@ def getArgs():
 
 # Begin actual code
 
-def printBalance( node ):
+def findBalance( node, imbalance ):
     max_load = 0
 
     if len(node.children) > 0:
+        weights = set()
+
         for child in node.children:
             load = getBalance(child)
+            weights.add(load)
 
             if load > max_load:
                 max_load = load
                 max_child = child
 
-            print "I'm %s weighing %d and child %s has %d" % ( node.name, node.weight, child.name, getBalance(child) )
+        new_imbalance = max(weights) - min(weights)
 
-        printBalance( max_child )
+        if new_imbalance > 0:
+            print "I'm %s weighing %d and it appears that child %s is over by %d" % (node.name, node.weight, max_child.name, new_imbalance)
+            findBalance( max_child, new_imbalance )
+        else:
+            print "I'm %s and I'm the culprit!  I should actually weigh %d." % ( node.name, node.weight - imbalance )
 
 def getBalance( node ):
     if node.children == None:
@@ -68,10 +75,8 @@ def main():
 
     root = nodes[ me ].root
 
-    print( root )
-
-    printBalance( root )
-
+    print "The root of the tree is %s" % root.name
+    findBalance( root, 0 )
 
 
 if __name__=='__main__':
