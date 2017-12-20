@@ -20,6 +20,27 @@ def getArgs():
 
 # Begin actual code
 
+def printBalance( node ):
+    max_load = 0
+
+    if len(node.children) > 0:
+        for child in node.children:
+            load = getBalance(child)
+
+            if load > max_load:
+                max_load = load
+                max_child = child
+
+            print "I'm %s weighing %d and child %s has %d" % ( node.name, node.weight, child.name, getBalance(child) )
+
+        printBalance( max_child )
+
+def getBalance( node ):
+    if node.children == None:
+        return 0
+    else:
+        return node.weight + sum(map(getBalance,node.children))
+
 def main():
     input = getArgs()
     nodes = {}
@@ -45,7 +66,12 @@ def main():
                 else:
                     nodes[ child ] = Node( child, weight = 0, parent = nodes[ me ] )
 
-    print(RenderTree( nodes[ me ] ))
+    root = nodes[ me ].root
+
+    print( root )
+
+    printBalance( root )
+
 
 
 if __name__=='__main__':
