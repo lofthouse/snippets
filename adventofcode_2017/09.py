@@ -3,7 +3,7 @@ import sys
 import os.path
 
 def getArgs():
-    if len(sys.argv) != 3 :
+    if len(sys.argv) != 2 :
         print "Invalid argument"
         print "%s <input file> <part>" % sys.argv[0]
         sys.exit(1)
@@ -15,20 +15,15 @@ def getArgs():
         print "%s is not a file" % sys.argv[1]
         sys.exit(1)
 
-    part = int(sys.argv[2])
-
-    if not (part == 1 or part == 2):
-        print "%s is not a valid part" % sys.argv[2]
-        sys.exit(1)
-
-    return (input,part)
+    return input
 
 # Begin actual code
 
 def main():
-    input,part = getArgs()
+    input = getArgs()
 
     for line in input:
+        characters = 0
         score = 0
         groups = 0
         depth = 0
@@ -43,6 +38,8 @@ def main():
                     ignore = True
                 elif char == '>':
                     garbage = False
+                else:
+                    characters = characters + 1
 
             else:
                 if char == '{':
@@ -54,7 +51,7 @@ def main():
                 elif char == '<':
                     garbage = True
 
-        print "Found %d groups with a score of %d" % (groups,score)
+        print "Found %d groups with a score of %d and %d characters" % (groups,score,characters)
 
 if __name__=='__main__':
     main()
