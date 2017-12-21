@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 import sys
-import os.path
+import os
+
+def debug(*args):
+    if 'DEBUG' in os.environ:
+        print " ".join(map(str,args))
 
 def getArgs():
     if len(sys.argv) != 3 :
