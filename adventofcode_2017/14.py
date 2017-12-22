@@ -56,6 +56,18 @@ def hashRound(ring,position,skip,lengths):
 
     return (ring,position,skip)
 
+def expandRegion( disk, row, column ):
+    # I originally did row and column ranges and then excluded diagonals, but it was messy
+    # This is ugly but cleaner?
+    neighbors = [ (row-1,column),(row+1,column),(row,column-1),(row,column+1) ]
+
+    for R,C in neighbors:
+        if R >= 0 and R < 128 and C >= 0 and C < 128:
+            if disk[R][C] == '1':
+                disk[R][C] = ' '
+                expandRegion( disk, R, C )
+            else:
+                disk[R][C] = ' '
 
 def main():
     input = getArgs()
@@ -66,12 +78,30 @@ def main():
         hash = knotHash( input + '-' + str(i) )
         debug( hash )
         count = count + hash.count('1')
-        disk.append( hash )
+        # disk rows will need to be lists later for marking regions
+        disk.append( list(hash) )
 
     print "There are %d used squares" % (count)
 
     # WARNING: disk is now in row,column order
-    print disk[1][1]
+    region_count = 0
+
+
+    # strategy:  walk entire disk.  When we find a 1, mark it resolved ( ' ' )
+    # then recursively mark all adjacent squares as resolved and increase
+    # region count by 1
+    for r in range(128):
+        for c in range(128):
+            # Empty or already resolved cells:  do nothing
+            if disk[r][c] == '0' or disk[r][c] == ' ':
+                disk[r][c] = ' '
+            # Used cells must be in a new region
+            else:
+                region_count = region_count + 1
+                disk[r][c] = ' '
+                expandRegion( disk, r, c )
+
+    print "There were %d regions found" % region_count
 
 
 if __name__=='__main__':
