@@ -37,11 +37,13 @@ def main():
     for line in input:
         particles.append( dict(zip(['p','v','a','active'],map(lambda x: map(int,x),map(lambda x: x.split(','),map(lambda x: x.strip('<').split('>')[0],line.split('=')))[1:]) + [True]) ) )
 
+    pcount = len(particles)
+
     for tick in range(1000):
         closest = [0,999999999]
         stable = True
 
-        for i in range(len(particles)):
+        for i in range(pcount):
             if particles[i]['active']:
                 particles[i]['v'] = map( sum, zip(particles[i]['v'],particles[i]['a']) )
                 particles[i]['p'] = map( sum, zip(particles[i]['p'],particles[i]['v']) )
@@ -62,9 +64,9 @@ def main():
         if part == 2:
             to_destroy = []
 
-            for p1,p1_data in enumerate(particles):
-                for p2,p2_data in enumerate(particles):
-                    if p1 != p2 and p1_data['active'] and p2_data['active'] and p1_data['p'] == p2_data['p']:
+            for p1 in range(pcount):
+                for p2 in range(p1+1,pcount):
+                    if particles[p1]['active'] and particles[p2]['active'] and particles[p1]['p'] == particles[p2]['p']:
                         to_destroy = to_destroy + [p1,p2]
 
             for p in to_destroy:
