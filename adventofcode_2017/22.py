@@ -47,8 +47,8 @@ def main():
         for char in line:
             if char == '#':
                 nodes[ (r,c) ] = 2
-            c = c + 1
-        r = r - 1
+            c += 1
+        r -= 1
         c = -grid_max
 
     # direction 0 = forward = moves[0]
@@ -71,7 +71,7 @@ def main():
 
         # weakened => becomes infected
         if node == 1:
-            infections = infections + 1
+            infections += 1
 
         # Thanks for ordering states linearly with movements in CW order!!!
         direction = ( direction + node - 1 ) % 4
@@ -82,8 +82,8 @@ def main():
         # not using:
         # position = [sum(x) for x in zip(position,moves[direction]) ]
         # saves nearly 9 seconds!
-        position[0] = position[0] + rmoves[direction]
-        position[1] = position[1] + cmoves[direction]
+        position[0] += rmoves[direction]
+        position[1] += cmoves[direction]
 
     print "I have caused %d node infections" % infections
 
