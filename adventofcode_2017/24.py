@@ -33,7 +33,7 @@ def getArgs():
 components = {}
 ports = defaultdict(set)
 
-def longestFrom( port, used ):
+def bestFrom( port, used, part ):
     max_length = 0
     max_strength = 0
 
@@ -43,35 +43,27 @@ def longestFrom( port, used ):
         next_used = used.copy()
         next_used.add( next_component)
 
-        length, strength = longestFrom( next_port, next_used )
+        length, strength = bestFrom( next_port, next_used, part )
 
         length += 1
         strength += sum(components[next_component])
 
-        if length > max_length:
-            max_length = length
-            max_strength = strength
-        if length == max_length:
+        # All we care about is strength.  Length for info
+        if part == 1:
             if strength > max_strength:
                 max_strength = strength
+                max_length = length
+
+        # All we care about is length.  Strength is only used for tie breakers
+        if part == 2:
+            if length > max_length:
+                max_length = length
+                max_strength = strength
+            if length == max_length:
+                if strength > max_strength:
+                    max_strength = strength
 
     return max_length,max_strength
-
-def strongestFrom( port, used ):
-    max_strength = 0
-
-    # only consider components that aren't already used
-    for next_component in ports[port].difference(used):
-        next_port = components[next_component][0] if components[next_component][1] == port else components[next_component][1]
-        next_used = used.copy()
-        next_used.add( next_component)
-
-        strength = sum(components[next_component]) + strongestFrom( next_port, next_used )
-
-        if strength > max_strength:
-            max_strength = strength
-
-    return max_strength
 
 def main():
     input,part = getArgs()
@@ -82,8 +74,8 @@ def main():
         ports[a].add(i)
         ports[b].add(i)
 
-    print "The strongest bridge is", strongestFrom( 0, set() )
-    print "The longest bridge is %d with strength %d" % longestFrom(0, set() )
+    print "The strongest bridge is %d long with strength %d" % bestFrom(0, set(), 1 )
+    print "The longest bridge is %d long with strength %d" % bestFrom(0, set(), 2 )
 
 
 if __name__=='__main__':
