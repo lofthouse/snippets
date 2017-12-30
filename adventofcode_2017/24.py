@@ -33,19 +33,38 @@ def getArgs():
 components = {}
 ports = defaultdict(set)
 
-def strongestFrom( port, used ):
+def longestFrom( port, used ):
+    max_length = 0
     max_strength = 0
-
-#    print "Starting SF from",port,"having used",used
 
     # only consider components that aren't already used
     for next_component in ports[port].difference(used):
-#        print "Trying component",next_component,components[next_component]
         next_port = components[next_component][0] if components[next_component][1] == port else components[next_component][1]
-#        print "The next port will be",next_port
         next_used = used.copy()
         next_used.add( next_component)
-#        print "The next used list is",next_used
+
+        length, strength = longestFrom( next_port, next_used )
+
+        length += 1
+        strength += sum(components[next_component])
+
+        if length > max_length:
+            max_length = length
+            max_strength = strength
+        if length == max_length:
+            if strength > max_strength:
+                max_strength = strength
+
+    return max_length,max_strength
+
+def strongestFrom( port, used ):
+    max_strength = 0
+
+    # only consider components that aren't already used
+    for next_component in ports[port].difference(used):
+        next_port = components[next_component][0] if components[next_component][1] == port else components[next_component][1]
+        next_used = used.copy()
+        next_used.add( next_component)
 
         strength = sum(components[next_component]) + strongestFrom( next_port, next_used )
 
@@ -64,6 +83,7 @@ def main():
         ports[b].add(i)
 
     print "The strongest bridge is", strongestFrom( 0, set() )
+    print "The longest bridge is %d with strength %d" % longestFrom(0, set() )
 
 
 if __name__=='__main__':
