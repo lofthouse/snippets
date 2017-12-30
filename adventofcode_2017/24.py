@@ -8,7 +8,7 @@ def debug(*args):
         print " ".join(map(str,args))
 
 def getArgs():
-    if len(sys.argv) != 3 :
+    if len(sys.argv) != 2 :
         print "Invalid argument"
         print "%s <input file> <part>" % sys.argv[0]
         sys.exit(1)
@@ -20,13 +20,7 @@ def getArgs():
         print "%s is not a file" % sys.argv[1]
         sys.exit(1)
 
-    part = int(sys.argv[2])
-
-    if not (part == 1 or part == 2):
-        print "%s is not a valid part" % sys.argv[2]
-        sys.exit(1)
-
-    return (input,part)
+    return input
 
 # Begin actual code
 
@@ -66,7 +60,7 @@ def bestFrom( port, used, part ):
     return max_length,max_strength
 
 def main():
-    input,part = getArgs()
+    input = getArgs()
 
     for i,line in enumerate(input):
         a,b = map(int,line.split('/'))
