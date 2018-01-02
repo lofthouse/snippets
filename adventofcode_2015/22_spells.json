@@ -1,28 +1,33 @@
 [
     {
+        "key":"M",
         "name":"Magic Missile",
         "cost":53,
         "damage":4
     },
     {
+        "key":"D",
         "name":"Drain",
         "cost":73,
         "damage":2,
         "heal":2
     },
     {
+        "key":"S",
         "name":"Shield",
         "cost":113,
         "effect":6,
         "armor":7
     },
     {
+        "key":"P",
         "name":"Poison",
         "cost":173,
         "effect":6,
         "damage":3
     },
     {
+        "key":"R",
         "name":"Recharge",
         "cost":229,
         "effect":5,
