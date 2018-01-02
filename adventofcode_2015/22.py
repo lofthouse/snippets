@@ -9,6 +9,7 @@ from ast import literal_eval
 from itertools import combinations
 
 DEBUG = False
+part = 1
 
 def usageAndExit():
     print "Usage: 22.py <input data file(s)>\
@@ -21,6 +22,7 @@ def usageAndExit():
 
 def loadData():
     global DEBUG
+    global part
 
     data = {}
     data['player']={}
@@ -68,6 +70,8 @@ def loadData():
         if not os.path.isfile(arg):
             if arg.upper() == 'DEBUG':
                 DEBUG = True
+            if arg.isdigit() and (arg == '1' or arg == '2'):
+                part = int(arg)
             else:
                 argx = literal_eval(arg)
                 if isinstance(argx,dict):
@@ -168,6 +172,13 @@ def play(move,state):
         print "\nPLAYER TURN"
         print wc
 
+    if part == 2:
+        wc['player_hp'] -= 1
+        if wc['player_hp'] <= 0:
+            if DEBUG:
+                print "Hard mode die!"
+            return workingCopyToState(wc)
+
     # all timers will decrement momentarily, but if the spell cast
     # is not about to expire, it is invalid
     if move in timed_spells:
@@ -211,6 +222,15 @@ def play(move,state):
     if DEBUG:
         print "BOSS TURN"
         print wc
+
+    # Instructions seemed very clear this only happened on PLAYER'S TURN
+    # turns out it happens on Boss turn as well.  Overly complicated rules.
+    if part == 2:
+        wc['player_hp'] -= 1
+        if wc['player_hp'] <= 0:
+            if DEBUG:
+                print "Hard mode die!"
+            return workingCopyToState(wc)
 
     if processTimers(wc):
         return workingCopyToState(wc)
