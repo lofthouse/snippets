@@ -31,33 +31,54 @@ def getArgs():
 
 # Begin actual code
 
+def findBalance( pool, target, n ):
+    if n == 1:
+        return True
+
+    for j in range( 2, len(pool) - 2 ):
+        for group in combinations( pool, j ):
+            if sum(group) == target and findBalance( pool - set(group), target, n - 1):
+                # can balance!
+                debug( pool,"splits",n,"ways into",group,"and",tuple( pool - set(group) ) )
+                return True
+    debug( pool,"does not split %d ways" % n )
+    return False
+
 def main():
+    global packages
+
     input,part = getArgs()
 
     packages = set( map( int, input ) )
-    target = sum( packages ) / 3
+    if part == 1:
+        target = sum( packages ) / 3
+    else:
+        target = sum( packages ) / 4
+
     candidates = set()
+    valid_groups = set()
     min_length = len( packages )
 
-    for i in range( len(packages) - 2 ):
-        for candidate in combinations( packages, i ):
-            if sum(candidate) == target:
-                balance = packages - set(candidate)
+    # start by making a list of the valid package combos, starting with 2
+    # The winner will be the shortest length, so only progress if there's no winner
+    for i in range( 2, len(packages) - 2 ):
+        print "Trying groups of length %d" % i
+        for group in combinations( packages, i ):
+            if sum(group) == target:
+                valid_groups.add( group )
 
-                try:
-                    for j in range( len( balance ) - 2 ):
-                        for b_candidate in combinations( balance, j ):
-                            if sum( b_candidate ) == target:
-                                raise StopIteration
-                    print candidate,"does not work as there is no way to split the balance"
-                except StopIteration:
-                    print candidate,"works with",b_candidate,"and",tuple( balance-set(b_candidate) )
-                    candidates.add( candidate )
-                    min_length = min( min_length, len(candidate) )
+        # now find which can be balanced
+        for candidate in valid_groups:
+            # balance into part + 1 sub-groups
+            if findBalance( packages - set(candidate), target, part + 1 ):
+                candidates.add( candidate )
+                min_length = min( min_length, len(candidate) )
+
+        if len(candidates) != 0:
+            # we have a winner!!!!
+            break
 
     final_candidates = [ i for i in candidates if len(i) == min_length ]
-
-    print final_candidates
 
     QEs = [ reduce(mul,i) for i in final_candidates ]
 
