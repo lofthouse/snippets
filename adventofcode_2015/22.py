@@ -4,12 +4,11 @@ import sys
 import os.path
 import json
 import heapq
-from pprint import pprint
 from ast import literal_eval
-from itertools import combinations
 
 DEBUG = False
 part = 1
+timed_spells = ['S','P','R']
 
 def usageAndExit():
     print "Usage: 22.py <input data file(s)>\
@@ -20,6 +19,19 @@ def usageAndExit():
 ]"
     sys.exit(1)
 
+# From https://stackoverflow.com/a/13105359/3300042
+# needed to support loading the spells from a JSON
+def byteify(input):
+    if isinstance(input, dict):
+        return {byteify(key): byteify(value)
+                for key, value in input.iteritems()}
+    elif isinstance(input, list):
+        return [byteify(element) for element in input]
+    elif isinstance(input, unicode):
+        return input.encode('utf-8')
+    else:
+        return input
+
 def loadData():
     global DEBUG
     global part
@@ -27,57 +39,25 @@ def loadData():
     data = {}
     data['player']={}
     data['boss']={}
-    data['spells']={}
     data['moves']=[]
+    data['spells']={}
 
+    # defaults
     data['player']['Hit Points'] = 50
     data['player']['Armor'] = 0
     data['player']['Mana'] = 500
-
-    data['spells']['M'] = {
-        'name':'Magic Missile',
-        'cost':53,
-        'damage':4
-    }
-    data['spells']['D'] = {
-        'name':'Drain',
-        'cost':73,
-        'damage':2,
-        'heal':2
-    }
-    data['spells']['S'] = {
-        'name':'Shield',
-        'cost':113,
-        'effect':6,
-        'armor':7
-    }
-    data['spells']['P'] = {
-        'name':'Poison',
-        'cost':173,
-        'effect':6,
-        'damage':3
-    }
-    data['spells']['R'] = {
-        'name':'Recharge',
-        'cost':229,
-        'effect':5,
-        'mana':101
-    }
-
 
     # goal here is to allow input in any order and from as few or as many files as desired
     for arg in sys.argv[1:]:
         if not os.path.isfile(arg):
             if arg.upper() == 'DEBUG':
                 DEBUG = True
-            if arg.isdigit() and (arg == '1' or arg == '2'):
+            elif arg.isdigit() and (arg == '1' or arg == '2'):
                 part = int(arg)
             else:
                 argx = literal_eval(arg)
                 if isinstance(argx,dict):
                     for character in argx:
-                        if DEBUG:
-                            print "Processing " + character + " as " + repr( argx[character] )
                         if character == 'player':
                             data['player']['Hit Points'],data['player']['Armor'],data['player']['Mana'] = argx['player']
                         elif character == 'boss':
@@ -94,12 +74,10 @@ def loadData():
                     usageAndExit()
         else:
             with open( arg ) as input_file:
-                if DEBUG:
-                    print "Processing " + arg
                 try:
-                    content = json.load(input_file)
-                    # This is not quite working:  all data comes in as unicode
-                    # I don't feel like dealing with unicode now...
+                    # json.load creates a list of unicode-content dicts
+                    # we need a dict of string-content:  make go
+                    content = { x['key']:x for x in byteify( json.load(input_file) ) }
                     data['spells'] = content
                 except ValueError as err:
                     input_file.seek(0)
@@ -116,7 +94,7 @@ def loadData():
 
     for requirement in ('player','boss','spells'):
         if len(data[requirement]) == 0:
-            print "Invalid input:  missing definition of %s" % requirement
+            print "Incomplete input:  missing definition of %s" % requirement
             sys.exit(1)
         else:
             response.append( data[requirement] )
@@ -133,27 +111,21 @@ def workingCopyToState(wc):
 
 # will return True if boss was killed so caller can Do The Right Thing
 def processTimers(wc):
-    timed_spells = ['S','P','R']
+    global timed_spells
 
     # Execute all timed spells
     for timer in timed_spells:
         if wc[timer] > 0:
             wc[timer] -= 1
             if timer == 'S':
-                if DEBUG:
-                    print "Shields activated"
-                wc['player_armor'] = 7
+                wc['player_armor'] = spells['S']['armor']
             if timer == 'P':
-                if DEBUG:
-                    print "Poison activated"
-                wc['boss_hp'] -= 3
+                wc['boss_hp'] -= spells['P']['damage']
                 if wc['boss_hp'] <= 0:
-                    # you win!  return proof and let caller deal with consequences
+                    # You Win!
                     return True
             if timer == 'R':
-                if DEBUG:
-                    print "Recharge activated"
-                wc['player_mana'] += 101
+                wc['player_mana'] += spells['R']['mana']
 
     return False
 
@@ -163,9 +135,9 @@ def play(move,state):
     global spells
     global player
     global boss
+    global timed_spells
 
     player_armor = 0
-    timed_spells = ['S','P','R']
 
     wc = stateWorkingCopy(state)
     if DEBUG:
@@ -175,8 +147,6 @@ def play(move,state):
     if part == 2:
         wc['player_hp'] -= 1
         if wc['player_hp'] <= 0:
-            if DEBUG:
-                print "Hard mode die!"
             return workingCopyToState(wc)
 
     # all timers will decrement momentarily, but if the spell cast
@@ -228,8 +198,6 @@ def play(move,state):
     if part == 2:
         wc['player_hp'] -= 1
         if wc['player_hp'] <= 0:
-            if DEBUG:
-                print "Hard mode die!"
             return workingCopyToState(wc)
 
     if processTimers(wc):
@@ -249,12 +217,6 @@ def main():
     lowest_cost = 99999
     highest_cost = 0
     player, boss, spells, moves = loadData()
-    gamepieces = {'Player: ':player,'Boss: ':boss,'Spells: ':spells, 'Moves: ':moves}
-
-    if DEBUG:
-        for element in gamepieces:
-            print element
-            pprint( gamepieces[element] )
 
     # State Tuple:
     #(hp,mana, <- player
@@ -282,47 +244,30 @@ def main():
         visited = set()
         visited.add( state )
 
-        print moves
-
         while len(moves) > 0:
             cost,path,state = heapq.heappop( moves )
+
             for spell in spells:
                 new_cost = cost + spells[spell]['cost']
                 new_path = path + spell
 
-                if DEBUG:
-                    print "Trying to cast %s from %s" % (spell,path)
-
                 new_state = play( spell, state )
                 if new_state:
                     if new_state[0] <= 0:
-                        if DEBUG:
-                            print "Player loses casting %s from %s" % (spell,path)
+                        # Player lost:  nothing more to do with this
+                        pass
                     elif new_state[2] <= 0:
-                        if DEBUG:
-                            print "Boss loses casting %s from %s" % (spell,path)
+                        # Boss lost:  if this is a winning strategy, update mins
                         if new_cost < min_cost:
                             min_cost = new_cost
                             min_path = new_path
                     else:
+                        # otherwise, schedule this result for more study unless
+                        # we've already been here or its already too expensive
                         if new_state not in visited and new_cost < min_cost:
                             heapq.heappush( moves, (new_cost, new_path, new_state) )
 
         print "The minimum cost to win was %d, achieved by casting %s" % (min_cost,min_path)
-
-
-    # create a costed tree
-    # initialize min winning cost with a very very large value
-    # load tree with each possible opening spell and the resulting state...
-    # While min cost in tree < min winning cost
-        # play the next possible moves
-            # execute spell queue
-            # if a winning state, update min winning cost
-
-#HERE
-
-    return 0
-
 
 if __name__=="__main__":
     main()
