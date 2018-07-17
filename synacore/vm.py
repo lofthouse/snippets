@@ -34,91 +34,172 @@ def loadBinary():
 
 # Begin actual code
 
-def halt(memory,ptr):
+### vm instructions ###
+
+def halt():
     return False
 
 def set():
-    print( "%s is not defined yet" % sys._getframe().f_code.co_name)
-    return noop()
+    global ptr
+    write_register( ptr + 1 , read_memory( ptr + 2 ) )
+
+    ptr = ptr + 3
 
 def push():
-    print( "%s is not defined yet" % sys._getframe().f_code.co_name)
-    return noop()
+    global ptr
+    global stack
+
+    stack.append( read_memory( ptr + 1 ) )
+    ptr = ptr + 2
 
 def pop():
-    print( "%s is not defined yet" % sys._getframe().f_code.co_name)
-    return noop()
+    global ptr
+    global stack
+
+    if len(stack) > 0:
+        write_register( ptr + 1, stack.pop() )
+        ptr = ptr + 2
+    else:
+        print( "Popped empty stack:  system halting" )
+        sys.exit(1)
 
 def eq():
-    print( "%s is not defined yet" % sys._getframe().f_code.co_name)
-    return noop()
+    global ptr
+
+    if read_memory( ptr + 2 ) == read_memory( ptr + 3 ):
+        write_register( ptr + 1, 1 )
+    else:
+        write_register( ptr + 1, 0 )
+
+    ptr = ptr + 4
 
 def gt():
-    print( "%s is not defined yet" % sys._getframe().f_code.co_name)
-    return noop()
+    global ptr
+
+    if read_memory( ptr + 2 ) > read_memory( ptr + 3 ):
+        write_register( ptr + 1, 1 )
+    else:
+        write_register( ptr + 1, 0 )
+
+    ptr = ptr + 4
 
 def jmp():
     global ptr
-    ptr = memory[ ptr + 1 ]
+    ptr = read_memory( ptr + 1 )
 
 def jt():
-    global memory
     global ptr
 
-    if not memory[ ptr + 1 ] == 0:
-        ptr = memory[ ptr + 2 ]
+    if not read_memory( ptr + 1 ) == 0:
+        ptr = read_memory( ptr + 2 )
     else:
         ptr = ptr + 3
 
 def jf():
-    print( "%s is not defined yet" % sys._getframe().f_code.co_name)
-    return noop()
+    global ptr
+
+    if read_memory( ptr + 1 ) == 0:
+        ptr = read_memory( ptr + 2 )
+    else:
+        ptr = ptr + 3
 
 def add():
-    print( "%s is not defined yet" % sys._getframe().f_code.co_name)
-    return noop()
+    global ptr
+
+    write_register( ptr + 1, ( read_memory( ptr + 2 ) + read_memory( ptr + 3 ) ) % 32768 )
+    ptr = ptr + 4
 
 def mult():
-    print( "%s is not defined yet" % sys._getframe().f_code.co_name)
-    return noop()
+    global ptr
+
+    write_register( ptr + 1, ( read_memory( ptr + 2 ) * read_memory( ptr + 3 ) ) % 32768 )
+    ptr = ptr + 4
 
 def mod():
-    print( "%s is not defined yet" % sys._getframe().f_code.co_name)
-    return noop()
+    global ptr
+
+    write_register( ptr + 1, ( read_memory( ptr + 2 ) % read_memory( ptr + 3 ) ) % 32768 )
+    ptr = ptr + 4
 
 def _and():
-    print( "%s is not defined yet" % sys._getframe().f_code.co_name)
-    return noop()
+    global ptr
+
+    write_register( ptr + 1, ( read_memory( ptr + 2 ) & read_memory( ptr + 3 ) ) % 32768 )
+    ptr = ptr + 4
 
 def _or():
-    print( "%s is not defined yet" % sys._getframe().f_code.co_name)
-    return noop()
+    global ptr
+
+    write_register( ptr + 1, ( read_memory( ptr + 2 ) | read_memory( ptr + 3 ) ) % 32768 )
+    ptr = ptr + 4
 
 def _not():
-    print( "%s is not defined yet" % sys._getframe().f_code.co_name)
-    return noop()
+    global ptr
+
+    write_register( ptr + 1, ( ~ read_memory( ptr + 2 ) & 32767 ) % 32768 )
+    ptr = ptr + 3
 
 def rmem():
-    print( "%s is not defined yet" % sys._getframe().f_code.co_name)
-    return noop()
+    global memory
+    global ptr
+    global regs
+
+    if memory[ ptr + 2 ] < 32768:
+        # we have to read from the address stored in the ptr + 2 location
+        write_register( ptr + 1 , read_memory( memory[ ptr + 2 ] ) )
+    else:
+        # Flipped because "844" in reg 32770 is supposed to be read as a memory address at address 859
+        # But causes problem at address 875 when "30000" in reg 32768 is read as a memory address
+#        write_memory( ptr + 1 , read_memory( regs[ memory [ ptr + 2 ] - 32768 ] ) )
+#        print( "Memory read attempted from register address:  system halting" )
+#        sys.exit(1)
+        write_register( ptr + 1 , read_memory( regs[ memory[ ptr + 2 ] - 32768 ] ) )
+
+    ptr = ptr + 3
 
 def wmem():
-    print( "%s is not defined yet" % sys._getframe().f_code.co_name)
-    return noop()
-
-def call():
-    print( "%s is not defined yet" % sys._getframe().f_code.co_name)
-    return noop()
-
-def ret():
-    print( "%s is not defined yet" % sys._getframe().f_code.co_name)
-    return noop()
-
-def out():
     global memory
     global ptr
 
-    print( chr(memory[ptr+1]), end='' )
+    # if asked to write to a register, write to the memory address IN that register!
+    memory[ read_memory( ptr + 1 ) ] =  read_memory( ptr + 2 )
+
+    ptr = ptr + 3
+
+def call():
+    global ptr
+    global stack
+
+    stack.append( ptr + 2 )
+    ptr = read_memory( ptr + 1 )
+
+#    print( "CALLING" )
+#    print( "Pointer: %d" % ptr )
+#    print( "Memory at %d: %s" % (ptr,memory[ptr:ptr+4]) )
+#    print( "Registers: %s" % regs )
+#    print( "Stack: %s" % stack )
+
+
+def ret():
+    global ptr
+    global stack
+
+    if len(stack) > 0:
+        ptr = stack.pop()
+    else:
+        print( "Return attempted with empty stack:  system halting" )
+        sys.exit(1)
+
+#    print( "RETURNING" )
+#    print( "Pointer: %d" % ptr )
+#    print( "Memory at %d: %s" % (ptr,memory[ptr:ptr+4]) )
+#    print( "Registers: %s" % regs )
+#    print( "Stack: %s" % stack )
+
+def out():
+    global ptr
+
+    print( chr( read_memory( ptr+1 ) ), end='' )
 
     ptr = ptr + 2
 
@@ -131,17 +212,42 @@ def noop():
 
     ptr = ptr + 1
 
+### my instructions ###
+
+def read_memory( ptr ):
+    global memory
+    global regs
+
+    if memory[ ptr ] > 32767:
+        return regs[ memory[ ptr ] - 32768 ]
+    else:
+        return memory[ ptr ]
+
+def write_register( ptr, value ):
+    global memory
+    global regs
+
+    if memory[ ptr ] > 32767:
+        regs[ memory[ ptr ] - 32768 ] = value
+    else:
+        print( "Register write attempted with literal:  system halting" )
+        sys.exit(1)
+
 def main():
     checkArgs()
 
     global memory
     memory = loadBinary()
+    print( "Loaded address space of size %d" % len(memory) )
 
     global ptr
     ptr = 0
 
     global regs
     regs = [0,0,0,0,0,0,0,0]
+
+    global stack
+    stack = []
 
     execute = {
         0: halt,
@@ -169,12 +275,23 @@ def main():
     }
 
     while True:
-        if memory[ptr] == 0:
+        if read_memory( ptr ) == 0:
+            break
+        elif ptr > 2500:
+            debug( "Stopping due to pointer limit" )
             break
         else:
-            debug( "Pointer: %d" % ptr )
-            debug( "Memory at %d: %s" % (ptr,memory[ptr:ptr+4]) )
+            debug( "Pointer before: %d" % ptr )
+            debug( "Memory at %d before: %s" % (ptr,memory[ptr:ptr+4]) )
             execute[ memory[ptr] ]()
+            debug( "Registers after: %s" % regs )
+            debug( "" )
+
+
+    print( "Pointer: %d" % ptr )
+    print( "Memory at %d: %s" % (ptr,memory[ptr:ptr+4]) )
+    print( "Registers: %s" % regs )
+    print( "Stack: %s" % stack )
 
 if __name__=='__main__':
     main()
