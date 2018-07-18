@@ -144,16 +144,8 @@ def rmem():
     global ptr
     global regs
 
-    if memory[ ptr + 2 ] < 32768:
-        # we have to read from the address stored in the ptr + 2 location
-        write_register( ptr + 1 , read_memory( memory[ ptr + 2 ] ) )
-    else:
-        # Flipped because "844" in reg 32770 is supposed to be read as a memory address at address 859
-        # But causes problem at address 875 when "30000" in reg 32768 is read as a memory address
-#        write_memory( ptr + 1 , read_memory( regs[ memory [ ptr + 2 ] - 32768 ] ) )
-#        print( "Memory read attempted from register address:  system halting" )
-#        sys.exit(1)
-        write_register( ptr + 1 , read_memory( regs[ memory[ ptr + 2 ] - 32768 ] ) )
+    # if asked to read from a register, read from the memory address IN that register!
+    write_register( ptr + 1 , read_memory( read_memory( ptr + 2 ) ) )
 
     ptr = ptr + 3
 
@@ -173,12 +165,6 @@ def call():
     stack.append( ptr + 2 )
     ptr = read_memory( ptr + 1 )
 
-#    print( "CALLING" )
-#    print( "Pointer: %d" % ptr )
-#    print( "Memory at %d: %s" % (ptr,memory[ptr:ptr+4]) )
-#    print( "Registers: %s" % regs )
-#    print( "Stack: %s" % stack )
-
 
 def ret():
     global ptr
@@ -190,12 +176,6 @@ def ret():
         print( "Return attempted with empty stack:  system halting" )
         sys.exit(1)
 
-#    print( "RETURNING" )
-#    print( "Pointer: %d" % ptr )
-#    print( "Memory at %d: %s" % (ptr,memory[ptr:ptr+4]) )
-#    print( "Registers: %s" % regs )
-#    print( "Stack: %s" % stack )
-
 def out():
     global ptr
 
@@ -204,8 +184,16 @@ def out():
     ptr = ptr + 2
 
 def _in():
-    print( "%s is not defined yet" % sys._getframe().f_code.co_name)
-    return noop()
+    global input_buffer
+    global memory
+    global ptr
+
+    if len( input_buffer ) == 0:
+        input_buffer = list( raw_input() )
+        # make sure we pass the newline!
+        input_buffer.append( '\n' )
+
+    memory[ read_memory( ptr + 1 ) ] = ord( input_buffer.pop( 0 ) )
 
 def noop():
     global ptr
@@ -249,6 +237,11 @@ def main():
     global stack
     stack = []
 
+    global input_buffer
+    input_buffer = []
+
+    max_ptr = 0
+
     execute = {
         0: halt,
         1: set,
@@ -277,18 +270,14 @@ def main():
     while True:
         if read_memory( ptr ) == 0:
             break
-        elif ptr > 2500:
-            debug( "Stopping due to pointer limit" )
-            break
         else:
-            debug( "Pointer before: %d" % ptr )
-            debug( "Memory at %d before: %s" % (ptr,memory[ptr:ptr+4]) )
+            if ptr > max_ptr:
+                max_ptr = ptr
             execute[ memory[ptr] ]()
-            debug( "Registers after: %s" % regs )
-            debug( "" )
 
 
     print( "Pointer: %d" % ptr )
+    print( "Max Ptr: %d" % max_ptr )
     print( "Memory at %d: %s" % (ptr,memory[ptr:ptr+4]) )
     print( "Registers: %s" % regs )
     print( "Stack: %s" % stack )
