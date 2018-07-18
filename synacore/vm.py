@@ -193,7 +193,9 @@ def _in():
         # make sure we pass the newline!
         input_buffer.append( '\n' )
 
-    memory[ read_memory( ptr + 1 ) ] = ord( input_buffer.pop( 0 ) )
+    write_register( ptr + 1 , ord( input_buffer.pop( 0 ) ) )
+
+    ptr = ptr + 2
 
 def noop():
     global ptr
