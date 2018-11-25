@@ -1,0 +1,41 @@
+
+R2 is 32769
+
+
+5452    IF R8 == 0 GOTO 5605
+5454 .... 6043
+
+R1 = 3
+R2 = 0
+
+6042    COPY R8 to R2
+6045    CALL 6027 (RET to 6047)
+6027    IF R1 <> 0 GOTO 6035
+6035    IF R2 <> 0 GOTO 6048
+6048    PUSH R1 to stack
+6050    R2 = R2 + 32767 ( R2-- )
+6054    CALL 6027 (RET to 6056)
+6027    IF R1 <> 0 GOTO 6035
+6035    IF R2 <> 0 GOTO 6048
+6038    R1 = R1 + 32767 ( R1-- )
+6042    COPY R8 to R2
+
+... Repeat until R1 == 0 ....
+
+6030    R1 = R2 + 1
+6034    RETURN (6047)
+6047    RETURN (6056)
+6056    R2 = R1
+6059    POP R1 from stack
+6061    R1 = R1 + 32767 ( R1-- )
+6065    CALL 6027 (RET to 6067)
+6027    IF R1 <> 0 GOTO 6035
+6030    R1 = R2 + 1
+6034    RETURN (6067)
+6067    RETURN (6047)
+6047    RETURN (6056)
+6056    R2 = R1
+6059    POP R1 from stack
+6061    R1 = R1 + 32767 ( R1-- )
+6065    CALL 6027 (RET to 6067)
+

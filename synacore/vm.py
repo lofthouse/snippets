@@ -207,8 +207,18 @@ def noop():
 def read_memory( ptr ):
     global memory
     global regs
+    global stack
+    global stepping
 
     if memory[ ptr ] > 32767:
+        if memory[ ptr ] == 32775:
+            stepping = True
+            print( "Register 8 has been accessed!!!!!!" )
+            print( "Pointer: %d" % ptr )
+            print( "Memory at %d: %s" % (ptr-2,memory[ptr-1:ptr+5]) )
+            print( "Registers: %s" % regs )
+            print( "Stack: %s" % stack )
+
         return regs[ memory[ ptr ] - 32768 ]
     else:
         return memory[ ptr ]
@@ -242,7 +252,8 @@ def main():
     global input_buffer
     input_buffer = []
 
-    max_ptr = 0
+    global stepping
+    stepping = False
 
     execute = {
         0: halt,
@@ -273,16 +284,21 @@ def main():
         if read_memory( ptr ) == 0:
             break
         else:
-            if ptr > max_ptr:
-                max_ptr = ptr
+            if stepping:
+                print( "" )
+                print( "Pointer: %d" % ptr )
+                print( "Memory at %d: %s" % (ptr,memory[ptr:ptr+8]) )
+                print( "Registers: %s" % regs )
+                print( "Stack: %s" % stack )
+                foo = raw_input("[Enter to continue, r to resume, # to reg 8]")
+                if len(foo) > 0:
+                    if foo[0] == "r":
+                        stepping = False
+                    else:
+                        regs[7] = int(foo)
+
             execute[ memory[ptr] ]()
 
-
-    print( "Pointer: %d" % ptr )
-    print( "Max Ptr: %d" % max_ptr )
-    print( "Memory at %d: %s" % (ptr,memory[ptr:ptr+4]) )
-    print( "Registers: %s" % regs )
-    print( "Stack: %s" % stack )
 
 if __name__=='__main__':
     main()
