@@ -11,8 +11,9 @@ def main():
     start = "a"
     key = sys.argv[1]
     zeroes = int( sys.argv[2] )
+    finish = "0" * zeroes
 
-    while start != '00000':
+    while start != finish:
         pad += 1
         start = hashlib.md5( (key+str(pad)).encode('utf-8') ).hexdigest()[:zeroes]
 
