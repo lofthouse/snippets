@@ -7,6 +7,10 @@ def readfile():
         print( f"Usage:  {sys.argv[0]} <input_file>" )
         sys.exit(1)
 
+    with open( sys.argv[1] ) as in_file:
+        return in_file.read().splitlines()
+
+
 def main():
     sys.exit(0)
 
