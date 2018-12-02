@@ -2,6 +2,7 @@
 import os
 import sys
 from collections import Counter
+from itertools import combinations
 
 def readfile():
     if len(sys.argv) != 2 or not os.path.isfile( sys.argv[1] ):
@@ -22,12 +23,11 @@ def main():
         cs *= sum( [1 for box in box_contents if count in box.values() ] )
     print( f"The checksum is {cs}" )
 
-    for i,box_a in enumerate(boxes):
-        for box_b in boxes[i+1:]:
-            common_letters = [ al for al,bl in zip(box_a,box_b) if al == bl ]
-            if len(common_letters) == len(box_b) - 1:
-                print( f"The common box ID letters are {''.join(common_letters)}" )
-                sys.exit(0)
+    for box_a,box_b in combinations(boxes,2):
+        common_letters = [ al for al,bl in zip(box_a,box_b) if al == bl ]
+        if len(common_letters) == len(box_b) - 1:
+            print( f"The common box ID letters are {''.join(common_letters)}" )
+            break
 
 if __name__ == "__main__":
     main()
