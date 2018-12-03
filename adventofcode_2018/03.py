@@ -37,13 +37,14 @@ def main():
 
     for claim in claims:
         ID,x0,y0,w,h = claim
-        disputed = False
-        for i in range(x0,x0+w):
-            for j in range(y0,y0+h):
-                if map[i,j] != ID:
-                    disputed = True
+#        disputed = False
+#        for i in range(x0,x0+w):
+#            for j in range(y0,y0+h):
+#                if map[i,j] != ID:
+#                    disputed = True
 
-        if not disputed:
+#        if not disputed:
+        if np.all( map[x0:x0+w,y0:y0+h] == ID ):
             print( f"Claim ID {ID} is intact!")        
 
 if __name__ == "__main__":
