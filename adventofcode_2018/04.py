@@ -4,7 +4,6 @@ import sys
 from collections import defaultdict
 import re
 import operator
-import pprint as pp
 
 def readfile():
     if len(sys.argv) != 2 or not os.path.isfile( sys.argv[1] ):
@@ -23,13 +22,8 @@ def main():
         events.append( re.findall('\[(\d+)-(\d+)-(\d+) (\d+):(\d+)\] (.+)', line)[0] )
     events = sorted(events)
 
-#    pp.pprint( events )
-
-    guard_stats = defaultdict( lambda: defaultdict(int) )
+    guard_stats = defaultdict( lambda: [ 0 for i in range(60)] )
     for event in events:
-        # ('1518', '08', '28', '23', '56', 'Guard #1559 begins shift'),
-        # ('1518', '08', '29', '00', '47', 'falls asleep'),
-        # ('1518', '08', '29', '00', '59', 'wakes up'),
         details = event[5].split()
         if details[0] == 'Guard':
             ID = details[1]
@@ -39,28 +33,17 @@ def main():
             end = int( event[4] )
             for minute in range(start,end):
                 guard_stats[ID][minute] += 1
-        else:
-            print( "ERROR!")
-            print( event )
 
-#    pp.pprint(guard_stats)
-    laziness = [ (sum(guard_stats[i].values()),i) for i in guard_stats ]
-#    pp.pprint( laziness )
-#    laziness = sorted( laziness )
-#    pp.pprint( laziness )
+    laziness = [ ( sum(guard_stats[i]),i) for i in guard_stats ]
     _,lazy = max(laziness)
 
-#    pp.pprint( guard_stats[lazy])
-
-    cs = int( lazy[1:] ) * max(guard_stats[lazy].items(), key=operator.itemgetter(1))[0]
+    cs = int( lazy[1:] ) * guard_stats[lazy].index( max( guard_stats[lazy] ) )
     print( f"The laziest guard is {lazy} with a checksum of {cs}")
 
-    minutes = { g: max( guard_stats[g].values() ) for g in guard_stats}
+    minutes = { g: max( guard_stats[g] ) for g in guard_stats}
     minuteman = max(minutes.items(), key=operator.itemgetter(1))[0]
 
-    pp.pprint( guard_stats[minuteman])
-
-    cs = int( minuteman[1:] ) * max(guard_stats[minuteman].items(), key=operator.itemgetter(1))[0]
+    cs = int( minuteman[1:] ) * guard_stats[minuteman].index( max( guard_stats[minuteman] ) )
     print( f"The laziest guard is {minuteman} with a checksum of {cs}")
 
 if __name__ == "__main__":
