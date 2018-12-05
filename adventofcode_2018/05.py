@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 import os
 import sys
+import operator
 import string
 
 def readfile():
@@ -11,30 +12,30 @@ def readfile():
     with open( sys.argv[1] ) as in_file:
         return in_file.read().splitlines()[0]
 
+def react(line):
+    deletion = True
+    while deletion:
+        deletion = False
+        before = len(line)
+        for k in string.ascii_lowercase:
+            line = line.replace(k+k.upper(),'').replace(k.upper()+k,'')
+        if len(line) != before:
+            deletion = True
+    return( len(line) )
 
 def main():
     original = readfile()
 
-    counts = {}
+    print( react(original) )
+
+    counts = []
     for l in string.ascii_lowercase:
         line = original.replace(l,'').replace(l.upper(),'')
         print( f"Processing {l}")
 
-        deletion = True
-        while deletion:
-            #print( line )
-            for n,i in enumerate(line[:-1]):
-                if i.islower() and line[n+1] == i.upper() or \
-                    i.isupper() and line[n+1] == i.lower():
-                    deletion = True
-                    line = line[:n] + line[n+2:]
-                    break
-                else:
-                    deletion = False
-        counts[l] = len(line)
+        counts.append( react(line) )
 
-    print(counts)
-
+    print( min(counts) )
 
 if __name__ == "__main__":
     main()
