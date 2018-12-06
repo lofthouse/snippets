@@ -13,26 +13,25 @@ def readfile():
         return in_file.read().splitlines()[0]
 
 def react(line):
-    deletion = True
-    while deletion:
-        deletion = False
-        before = len(line)
-        for k in string.ascii_lowercase:
-            line = line.replace(k+k.upper(),'').replace(k.upper()+k,'')
-        if len(line) != before:
-            deletion = True
-    return( len(line) )
+    new = []
+    for c in line:
+        if not new:
+            new.append(c)
+        else:
+            if c.isupper() and new[-1] == c.lower() or\
+                c.islower() and new[-1] == c.upper():
+                new.pop()
+            else:
+                new.append(c)
+    return( len(new) )
 
 def main():
     original = readfile()
-
     print( react(original) )
 
     counts = []
     for l in string.ascii_lowercase:
         line = original.replace(l,'').replace(l.upper(),'')
-        print( f"Processing {l}")
-
         counts.append( react(line) )
 
     print( min(counts) )
