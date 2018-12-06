@@ -3,8 +3,9 @@ import os
 import sys
 from pprint import pprint
 
-max = 10
-grid = [ [ [-1,0] for i in range(max) ] for j in range(max) ]
+maximum = 400
+grid = [ [ -1 for i in range(maximum) ] for j in range(maximum) ]
+locations = []
 infinite = set()
 
 def readfile():
@@ -15,61 +16,59 @@ def readfile():
     with open( sys.argv[1] ) as in_file:
         return in_file.read().splitlines()
 
-def mark( x,y,i,d ):
-    if x <= 0 or y <= 0 or x >= max or y >= max:
-        infinite.add( i )
-        return True
-    print( f"Marking {x},{y} for {i} at {d}" )
-    # tie case:  it goes to nobody
-    if grid[x][y][1] == d:
-        grid[x][y][0] = -1
-        return False
-    # already claimed, move along
-    elif grid[x][y][0] > 0 and grid[x][y][1] < d:
-        return False
+def closest(x,y):
+    distance = 2*maximum
+    winner = -1
+    tie = False
+    for i in range( len(locations) ):
+        d = abs( x-locations[i][0] ) + abs( y-locations[i][1] )
+        if d == distance:
+            tie = True
+        if d < distance:
+            tie = False
+            distance = d
+            winner = i
+
+    if tie:
+        return( -1 )
     else:
-        grid[x][y] = [i,d]
-        return True
+        return( winner )    
 
 def main():
     lines = readfile()
-
-    locations = []
 
     for i,coord in enumerate(lines):
         x,y = coord.split(',')
         x = int(x)
         y = int(y)
         locations.append( (x,y) )
-        grid[x][y] = [i,0]
-    
-    pprint( grid )
-    pprint( locations )
+        grid[x][y] = i
 
-    marked = True
-    distance = 0
-    while marked and distance < 2*max:
-        marked = False
-        distance += 1
-        for i,home in enumerate(locations):
-            for x in range(home[0]-distance,home[0]+distance):
-                marked = mark(x,y+distance,i,distance) or marked
-            for y in range(home[1]-distance,home[1]+distance):
-                marked = mark(x-distance,y,i,distance) or marked
-            for x in range(home[0]-distance+1,home[0]+distance+1):
-                marked = mark(x,y-distance,i,distance) or marked
-            for y in range(home[1]-distance+1,home[1]+distance+1):
-                marked = mark(x+distance,y,i,distance) or marked
-    
-    pprint( grid )
+    pprint(locations)
 
-    scores = [ 0 for i in range( len( locations ) )]
-    for x in range(10):
-        for y in range(10):
-            if grid[x][y][0] > 0:
-                scores[ grid[x][y][0] ] += 1
+    for x in range(maximum):
+        for y in range(maximum):
+            grid[x][y] = closest(x,y)
+            if x == 0 or y == 0 or x == (maximum-1)  or y == (maximum-1):
+                infinite.add( grid[x][y] )
 
-    pprint( scores )
+    scores = [ 0 for i in range( len( locations ) ) ]
+    for x in range(maximum):
+        for y in range(maximum):
+            if grid[x][y] > 0:
+                scores[ grid[x][y] ] += 1
+
+    candidates = set()
+    for i in range( len(locations) ):
+        if i not in infinite:
+            candidates.add( scores[i] )
+    print( max(candidates) )
+
+#    for row in grid:
+#        print( row )
+
+#    pprint( scores )
+#    pprint( infinite )
 
 if __name__ == "__main__":
     main()
