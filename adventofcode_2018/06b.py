@@ -20,19 +20,13 @@ def closest(x,y):
     distance = 2*maximum
     winner = -1
     tie = False
+    d = 0
     for i in range( len(locations) ):
-        d = abs( x-locations[i][0] ) + abs( y-locations[i][1] )
-        if d == distance:
-            tie = True
-        if d < distance:
-            tie = False
-            distance = d
-            winner = i
-
-    if tie:
-        return( -1 )
+        d += abs( x-locations[i][0] ) + abs( y-locations[i][1] )
+    if d < 10000:
+        return( 1 )
     else:
-        return( winner )    
+        return( 0 )    
 
 def main():
     lines = readfile()
@@ -44,8 +38,6 @@ def main():
         locations.append( (x,y) )
         grid[x][y] = i
 
-    pprint(locations)
-
     for x in range(maximum):
         for y in range(maximum):
             grid[x][y] = closest(x,y)
@@ -53,22 +45,12 @@ def main():
                 infinite.add( grid[x][y] )
 
     scores = [ 0 for i in range( len( locations ) ) ]
+    tot = 0
     for x in range(maximum):
         for y in range(maximum):
-            if grid[x][y] > 0:
-                scores[ grid[x][y] ] += 1
+            tot += grid[x][y]
 
-    candidates = set()
-    for i in range( len(locations) ):
-        if i not in infinite:
-            candidates.add( scores[i] )
-    print( max(candidates) )
-
-#    for row in grid:
-#        print( row )
-
-#    pprint( scores )
-#    pprint( infinite )
+    print( tot )
 
 if __name__ == "__main__":
     main()
