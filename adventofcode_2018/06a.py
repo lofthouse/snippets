@@ -1,12 +1,13 @@
 #! /usr/bin/env python3
 import os
 import sys
-from pprint import pprint
 
+# size of square grid, and the list of points that spill to infinity
 maximum = 400
+infinite = set()
+
 grid = [ [ -1 for i in range(maximum) ] for j in range(maximum) ]
 locations = []
-infinite = set()
 
 def readfile():
     if len(sys.argv) != 2 or not os.path.isfile( sys.argv[1] ):
@@ -16,17 +17,19 @@ def readfile():
     with open( sys.argv[1] ) as in_file:
         return in_file.read().splitlines()
 
+# returns the value to be stored in the grid at x,y:  the closest point
+# ID or -1 in the event of a tie
 def closest(x,y):
-    distance = 2*maximum
+    min_distance = 2*maximum
     winner = -1
     tie = False
     for i in range( len(locations) ):
         d = abs( x-locations[i][0] ) + abs( y-locations[i][1] )
-        if d == distance:
+        if d == min_distance:
             tie = True
-        if d < distance:
+        if d < min_distance:
             tie = False
-            distance = d
+            min_distance = d
             winner = i
 
     if tie:
@@ -37,24 +40,23 @@ def closest(x,y):
 def main():
     lines = readfile()
 
+    # store all the points in locations
     for i,coord in enumerate(lines):
-        x,y = coord.split(',')
-        x = int(x)
-        y = int(y)
+        x,y = [ int(temp) for temp in coord.split(',') ]
         locations.append( (x,y) )
         grid[x][y] = i
 
-    for x in range(maximum):
-        for y in range(maximum):
-            grid[x][y] = closest(x,y)
-            if x == 0 or y == 0 or x == (maximum-1)  or y == (maximum-1):
-                infinite.add( grid[x][y] )
-
     scores = [ 0 for i in range( len( locations ) ) ]
+
+    # walk the grid and record closests, keeping score.  Anything on an edge is infinite
     for x in range(maximum):
         for y in range(maximum):
-            if grid[x][y] > 0:
-                scores[ grid[x][y] ] += 1
+            winner = closest(x,y)
+            grid[x][y] = winner
+            if winner > 0:
+                scores[ winner ] += 1
+            if x == 0 or y == 0 or x == (maximum-1)  or y == (maximum-1):
+                infinite.add( winner )
 
     candidates = set()
     for i in range( len(locations) ):
