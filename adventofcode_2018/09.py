@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 import os
 import sys
+from blist import blist
 
 def readfile():
     if len(sys.argv) != 2 or not os.path.isfile( sys.argv[1] ):
@@ -17,7 +18,7 @@ def main():
         players = int(players)
         marbles = int(marbles)
 
-        circle = [ 0 ]
+        circle = blist( [ 0 ] )
         scores = [ 0 for i in range(players) ]
         turn = 0
         current = 0
