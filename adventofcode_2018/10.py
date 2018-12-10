@@ -20,15 +20,18 @@ def main():
 
     for line in lines:
         foo = re.findall('.*<(.+)>.*<(.+)>', line)
-        positions.append( tuple( [int(x) for x in foo[0][0].split(',')] ) )
-        velocities.append( tuple( [int(x) for x in foo[0][1].split(',')] ) )
+        positions.append( [int(x) for x in foo[0][0].split(',')] )
+        velocities.append( [int(x) for x in foo[0][1].split(',')] )
 
     for t in range(10888):
-        positions = [ tuple( [ p[0]+v[0], p[1]+v[1] ]) for p,v in zip(positions,velocities) ]
+        positions = [ [ p[0]+v[0], p[1]+v[1] ] for p,v in zip(positions,velocities) ]
+
+    xs = [ x for x,y in positions ]
+    ys = [ y for x,y in positions ]
     dp = [ tuple( [ int(x) , int(y) ]) for x,y in positions ]
 
-    for j in range(180,210):
-        for i in range(160,320):
+    for j in range( min(ys), max(ys)+1 ):
+        for i in range( min(xs), max(xs)+1 ):
             if (i,j) in dp:
                 print( "#", end='' )
             else:
