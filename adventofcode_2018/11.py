@@ -3,7 +3,7 @@ import os
 import sys
 import numpy as np
 
-def readfile():
+def readserial():
     if len(sys.argv) != 2 or not sys.argv[1].isdigit():
         print( f"Usage:  {sys.argv[0]} <input>" )
         sys.exit(1)
@@ -12,8 +12,10 @@ def readfile():
 
 
 def main():
-    input = readfile()
+    input = readserial()
 
+    # Because the formula for power assumes 1-indexed grid,
+    # cheat and just pad with an unused 0-column and 0-row
     grid = np.zeros((301,301))
 
     for j in range( 1, 301 ):
@@ -34,9 +36,9 @@ def main():
         print( f"Processing target size {size}" )
         for j in range( 1, 302-size ):
             for i in range( 1,302-size ):
+                # Store the sum of the grid range:  thanks Numpy!
                 total_powers[ (i,j,size) ] = grid[i:i+size,j:j+size].sum()
 
-#    print( total_powers )
     print( max(total_powers, key=total_powers.get) )
 
 if __name__ == "__main__":
