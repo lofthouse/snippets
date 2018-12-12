@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 import os
 import sys
-import string
+import numpy as np
 
 def readfile():
     if len(sys.argv) != 2 or not sys.argv[1].isdigit():
@@ -14,7 +14,7 @@ def readfile():
 def main():
     input = readfile()
 
-    grid = [ [0 for i in range( 0, 301 )] for j in range( 0, 301 ) ]
+    grid = np.zeros((301,301))
 
     for j in range( 1, 301 ):
         for i in range( 1,301 ):
@@ -29,17 +29,14 @@ def main():
             power -= 5
             grid[i][j] = power
 
+    total_powers = {}
     for size in range(1,301):
-        total_powers = {}
         print( f"Processing target size {size}" )
         for j in range( 1, 302-size ):
             for i in range( 1,302-size ):
-                tp = 0
-                for y in range( j, j+size ):
-                    for x in range( i, i+size ):
-                        tp += grid[x][y]
-                total_powers[ (i,j,size) ] = tp
+                total_powers[ (i,j,size) ] = grid[i:i+size,j:j+size].sum()
 
+#    print( total_powers )
     print( max(total_powers, key=total_powers.get) )
 
 if __name__ == "__main__":
