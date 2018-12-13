@@ -62,6 +62,9 @@ def main():
             print( score )
 
         if previous == current:
+            count = sum( [ 1 for c in state if c == '#' ] )
+            score = score + count * (50000000000-gen)
+            print( score )
             break
 
 if __name__ == "__main__":
