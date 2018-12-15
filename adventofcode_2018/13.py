@@ -14,10 +14,9 @@ l_slash = np.array([[0,1],[1,0]])
 slashes = { '/': r_slash, '\\': l_slash }
 
 locations = set()
-rolling = set()
 
 grid = []
-carts = []
+carts = set()
 ID_counter = 0
 x = 0
 y = 0
@@ -33,7 +32,6 @@ class Cart:
         self.vector = np.array( vector )
         self.intersection = deque( [left,straight,right] )
         locations.add( (x,y) )
-        rolling.add( self.ID )
 
     def __lt__(self,other):
         return self.position[1] < other.position[1] or \
@@ -64,9 +62,10 @@ class Cart:
                 print( f"First collision is at {self}" )
                 first_collision = True
 
-            for cart in carts:
+            # you can't change a set while iterating it, but sorted() returns a new one :D
+            for cart in sorted(carts):
                 if cart == self:
-                    rolling.remove(cart.ID)
+                    carts.remove(cart)
             return
 
         locations.add( tuple(self.position) )
@@ -112,7 +111,7 @@ def main():
     for j,line in enumerate(lines):
         for i,segment in enumerate(line):
             if segment in c_sym:
-                carts.append( Cart(i,j,vectors[segment]) )
+                carts.add( Cart(i,j,vectors[segment]) )
                 if segment in c_sym_h:
                     grid[j][i] = '-'
                 elif segment in c_sym_v:
@@ -120,16 +119,14 @@ def main():
             else:
                 grid[j][i] = segment
 
-
     while True:
         for cart in sorted(carts):
-            if cart.ID in rolling:
+            if cart in carts:
                 cart.tick()
 
-        if len( rolling ) == 1:
-            print( f"Last elf rolling is at {carts[rolling.pop()]}" )
+        if len( carts ) == 1:
+            print( f"Last elf rolling is at {carts.pop()}" )
             sys.exit(0)
-
 
 if __name__ == "__main__":
     main()
