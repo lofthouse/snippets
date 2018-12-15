@@ -14,7 +14,7 @@ l_slash = np.array([[0,1],[1,0]])
 slashes = { '/': r_slash, '\\': l_slash }
 
 locations = set()
-removed = set()
+rolling = set()
 
 grid = []
 carts = []
@@ -33,6 +33,7 @@ class Cart:
         self.vector = np.array( vector )
         self.intersection = deque( [left,straight,right] )
         locations.add( (x,y) )
+        rolling.add( self.ID )
 
     def __lt__(self,other):
         return self.position[1] < other.position[1] or \
@@ -65,7 +66,7 @@ class Cart:
 
             for cart in carts:
                 if cart == self:
-                    removed.add(cart.ID)
+                    rolling.remove(cart.ID)
             return
 
         locations.add( tuple(self.position) )
@@ -121,17 +122,13 @@ def main():
 
 
     while True:
-        carts.sort()
-
-        for cart in carts:
-            if cart.ID not in removed:
+        for cart in sorted(carts):
+            if cart.ID in rolling:
                 cart.tick()
 
-        if len( carts ) - len( removed ) == 1:
-            for cart in carts:
-                if cart.ID not in removed:
-                    print( f"Last elf rolling is at {cart}" )
-                    sys.exit(0)
+        if len( rolling ) == 1:
+            print( f"Last elf rolling is at {carts[rolling.pop()]}" )
+            sys.exit(0)
 
 
 if __name__ == "__main__":
