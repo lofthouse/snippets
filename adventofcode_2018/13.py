@@ -13,21 +13,14 @@ r_slash = np.array([[0,-1],[-1,0]])
 l_slash = np.array([[0,1],[1,0]])
 slashes = { '/': r_slash, '\\': l_slash }
 
-locations = set()
-
 grid = []
 carts = set()
-ID_counter = 0
-x = 0
-y = 0
-
+locations = set()
 first_collision = False
 
 class Cart:
     def __init__(self,x,y,vector):
-        global ID_counter
-        self.ID = ID_counter
-        ID_counter += 1
+        self.ID = len( carts ) # We never add more after intialization, so this is OK
         self.position = np.array( (x,y) )
         self.vector = np.array( vector )
         self.intersection = deque( [left,straight,right] )
@@ -50,7 +43,7 @@ class Cart:
         return "(%3d,%3d)" % (self.position[0],self.position[1])
 
     def tick(self):
-        global first_collision,carts
+        global first_collision
 
         locations.remove( tuple(self.position) )
 
@@ -86,8 +79,8 @@ def readfile():
         return in_file.read().splitlines()
 
 def pgrid():
-    for j in range(y):
-        for i in range(x):
+    for j in range( len( grid ) ):
+        for i in range( len( grid[0] ) ):
             if (i,j) in locations:
                 print( "x", end="" )
             else:
@@ -95,18 +88,16 @@ def pgrid():
         print()
 
 def main():
-    global x,y,grid,carts
+    global grid,carts
 
     lines = readfile()
-    x = len( lines[0] )
-    y = len( lines )
 
     c_sym = set( ['<','>','^','v'] )
     c_sym_h = set( ['<','>'] )
     c_sym_v = set( ['^','v'] )
     vectors = { '^': (0,-1), 'v': (0,1), '<': (-1,0), '>': (1,0) }
 
-    grid = [ [" " for i in range(x)] for j in range(y) ]
+    grid = [ [" " for i in range( len( lines[0] ) ) ] for j in range( len( lines ) ) ]
 
     for j,line in enumerate(lines):
         for i,segment in enumerate(line):
