@@ -22,18 +22,18 @@ class warrior:
 def printgrid():
     for j in range(y):
         for i in range(x):
-            if (i,j) in walls:
+            if (j,i) in walls:
                 print('#',end='')
-            if (i,j) in opens:
+            if (j,i) in opens:
                 print('.',end='')
-            if (i,j) in warriors:
-                print(warriors[ (i,j) ].type,end='')
+            if (j,i) in warriors:
+                print(warriors[ (j,i) ].type,end='')
 
         print('  ', end='')
 
         for i in range(x):
-            if (i,j) in warriors:
-                print(warriors[ (i,j) ].type,'(',warriors[ (i,j) ].hp,'), ',end='')
+            if (j,i) in warriors:
+                print(warriors[ (j,i) ].type,'(',warriors[ (j,i) ].hp,'), ',end='')
 
         print('')
 
@@ -54,11 +54,11 @@ def main():
     for j,line in enumerate(lines):
         for i,element in enumerate(line):
             if element == ".":
-                opens.add( (i,j) )
+                opens.add( (j,i) )
             elif element == "#":
-                walls.add( (i,j) )
+                walls.add( (j,i) )
             else:
-                warriors[ (i,j) ] = warrior(element)
+                warriors[ (j,i) ] = warrior(element)
 
     x = i + 1
     y = j + 1
