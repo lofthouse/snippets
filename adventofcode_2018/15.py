@@ -2,6 +2,7 @@
 import os
 import sys
 from pprint import pprint
+import heapq
 
 # To facilitate reading order, all coordinates are are flipped when storing
 # x,y -> foo[ (y,x) ]
@@ -17,12 +18,54 @@ hp_max = 300
 class warrior:
     ap = 3
     hp = hp_max
+    type = ''
+    location = ''
+    coverage = set()
+    in_range = set()
+    reachable = dict()
+    to_reach_from = []
 
-    def __init__(self,t):
+    def __init__(self,t,loc):
         self.type=t
+        self.location=loc
 
-    def takeTurn(self,j,i):
+    def attack( self ):
+        return
+
+    def findReachable( self ):
+        while self.to_reach_from and self.coverage:
+            to_here,origin = heapq.heappop( self.to_reach_from )
+
+            self.coverage.discard( origin )
+            # once we've touched every in-range location, no point in proceeding
+            if self.coverage:
+                for next in adjacents( origin ):
+                    # use opens?
+                    if next in walls or next in warriors:
+                        pass
+                    else:
+                        if next not in self.reachable or len( self.reachable[ next ] ) > (to_here + 1):
+                            self.reachable[ next ] = self.reachable[ origin ].copy()
+                            self.reachable[ next ].append( next )
+                            heapq.heappush(self.to_reach_from,(to_here+1,next))
+
+    def move( self ):
+        self.reachable = dict()
+        # reachable will be a dict of move lists:  len(reachable(location)) = moves to reach
+        self.coverage = self.in_range.copy()
+        self.reachable[ self.location ] = []
+        self.to_reach_from = []
+        heapq.heappush(self.to_reach_from,(0,self.location))
+        self.findReachable()
+
+        print( "These are the places I can reach:" )
+        pprint( self.reachable )
+
+        return
+
+    def takeTurn( self ):
         targets = set()
+        self.in_range = set()
 
         for warrior in warriors:
             if warriors[ warrior ].type != self.type:
@@ -32,23 +75,28 @@ class warrior:
             return False
             # War is over!!!
 
-        print( self.type," here at (",i,",",j,")" )
+        print( self.type," here at ",self.location )
         print( "I can attack:" )
         pprint( targets )
 
+        for target in targets:
+            for loc in adjacents( target ):
+                if loc not in warriors and loc not in walls:
+                    self.in_range.add( loc )
+
+        print( "These are the places I can attack from:" )
+        pprint( self.in_range )
+
+        if not self.in_range:
+            return True
+            # Nothing for me to do
+
+        if self.location in self.in_range:
+            self.attack()
+        else:
+            self.move()
 
         return True
-
-
-
-#        make superlist of in-range locations
-#
-#        if null set:
-#            end turn
-#        elif (j,i) in set:
-#            attack the weakest link
-#        else:
-#            move!!!!!!
 
 
 
@@ -68,7 +116,7 @@ class warrior:
 def adjacents( loc ):
     return [ tuple(a+b for a,b in zip( loc, move )) for move in moves ]
 
-def attack( loc ):
+def attack():
     print( "Victim at ",loc," is under attack!" )
 
 def printgrid():
@@ -110,7 +158,7 @@ def main():
             elif element == "#":
                 walls.add( (j,i) )
             else:
-                warriors[ (j,i) ] = warrior(element)
+                warriors[ (j,i) ] = warrior(element,(j,i))
 
     x = i + 1
     y = j + 1
@@ -120,7 +168,7 @@ def main():
     complete = True
 
     for j,i in warriors:
-        if not warriors[ (j,i) ].takeTurn(j,i):
+        if not warriors[ (j,i) ].takeTurn():
             complete = False
             break
 
