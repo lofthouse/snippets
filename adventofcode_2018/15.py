@@ -49,6 +49,11 @@ class warrior:
                             self.reachable[ next ].append( next )
                             heapq.heappush(self.to_reach_from,(to_here+1,next))
 
+
+##### NEEED TO HANDLE SPECIAL CASE
+# if the paths are a TIE, we keep the one with the first step first in reading order
+
+
     def move( self ):
         self.reachable = dict()
         # reachable will be a dict of move lists:  len(reachable(location)) = moves to reach
@@ -60,6 +65,15 @@ class warrior:
 
         print( "These are the places I can reach:" )
         pprint( self.reachable )
+
+        destinations = set(self.reachable.keys()).intersection(self.in_range)
+        print( "These are the places I want to reach:" )
+        pprint( destinations )
+
+
+
+        print( "This is the best place to reach:" )
+        pprint( minpath(destinations,self.reachable) )
 
         return
 
@@ -75,6 +89,7 @@ class warrior:
             return False
             # War is over!!!
 
+        print()
         print( self.type," here at ",self.location )
         print( "I can attack:" )
         pprint( targets )
@@ -118,6 +133,20 @@ def adjacents( loc ):
 
 def attack():
     print( "Victim at ",loc," is under attack!" )
+
+def minpath( keys,paths ):
+    key = (99999,99999)
+    m = 9999999
+    for k in keys:
+        print( "Comparing ",k," and ",key )
+        if len( paths[k] ) == m:
+            key = min( key, k )
+        elif len( paths[k] ) < m:
+            key = k
+            m = len( paths[k] )
+        print( key," wins!" )
+
+    return key
 
 def printgrid():
     for j in range(y):
