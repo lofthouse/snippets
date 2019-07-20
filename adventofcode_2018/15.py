@@ -13,7 +13,7 @@ walls = set()
 warriors = dict()
 x = 0
 y = 0
-hp_max = 300
+hp_max = 200
 
 class warrior:
     ap = 3
@@ -30,7 +30,26 @@ class warrior:
         self.location=loc
 
     def attack( self ):
-        return
+        target = (99999,99999)
+        target_hp = hp_max + 1
+
+        # adjacents gives reading order, so no further tie breaking is needed!
+        for loc in adjacents( self.location ):
+#            print( "Testing attackability of ",loc )
+            if loc in warriors and warriors[ loc ].type != self.type:
+#                print( "I could attack this...",end='' )
+                if warriors[ loc ].hp < target_hp:
+#                    print( "and I will" )
+                    target = loc
+                    target_hp = warriors[ loc ].hp
+#                else:
+#                    print( "but I have better options" )
+
+#        print( "Attacking ",target )
+
+        warriors[ target ].hp -= self.ap
+        if warriors[ target ].hp <= 0:
+            del warriors[ target ]
 
     def findReachable( self ):
         while self.to_reach_from and self.uncoverage:
@@ -83,11 +102,12 @@ class warrior:
 #        print( "This is the best place to reach:" )
 #        pprint( minpath(destinations,self.reachable) )
 
-        step = self.reachable[ minpath(destinations,self.reachable) ][0]
+        if destinations:
+            step = self.reachable[ minpath(destinations,self.reachable) ][0]
 #        print( "My move is to:" )
 #        pprint( step )
-        warriors[ step ] = warriors.pop( self.location )
-        self.location = step
+            warriors[ step ] = warriors.pop( self.location )
+            self.location = step
 
         return
 
@@ -120,36 +140,18 @@ class warrior:
             return True
             # Nothing for me to do
 
+        if not self.location in self.in_range:
+#            print( "I must move" )
+            self.move()
+
         if self.location in self.in_range:
 #            print( "I choose to attack" )
             self.attack()
-        else:
-#            print( "I choose to move" )
-            self.move()
 
         return True
 
-
-
-#        vhp = hp_max + 1
-#
-#        for loc in adjacents( (j,i) ):
-#            # moves is in reading order, so so is this list
-#            if loc in warriors:
-#                if warriors[ loc ].hp < vhp:
-#                    victim = loc
-#                    vhp = warriors[ loc ].hp
-#        if vhp <= hp_max:
-#            attack( victim )
-
-
-
 def adjacents( loc ):
     return [ tuple(a+b for a,b in zip( loc, move )) for move in moves ]
-
-def attack():
-#    print( "Victim at ",loc," is under attack!" )
-    return
 
 def minpath( keys,paths ):
     key = (99999,99999)
@@ -164,6 +166,13 @@ def minpath( keys,paths ):
 #        print( key," wins!" )
 
     return key
+
+def outcome( r ):
+    hp_tot = 0
+    for warrior in warriors:
+        hp_tot += warriors[ warrior ].hp
+
+    return r * hp_tot
 
 def printgrid():
     for j in range(y):
@@ -213,8 +222,8 @@ def main():
 
     round = 0
     printgrid()
-    print( round," complete rounds fought so far" )
-    input()
+#    print( round," complete rounds fought so far" )
+#    input()
 
     complete = False
 
@@ -230,7 +239,8 @@ def main():
         for j,i in turn_order:
 #            print( "Time for (",j,",",i,") to take a turn" )
 
-            if not warriors[ (j,i) ].takeTurn():
+            # (j,i) may have just been killed, so check first before trying to takeTurn!
+            if (j,i) in warriors and not warriors[ (j,i) ].takeTurn():
                 complete = True
                 break
 
@@ -238,10 +248,13 @@ def main():
             round += 1
 
         printgrid()
-        print( round," complete rounds fought so far" )
-        input()
 
+#        print( round," complete rounds fought so far" )
+#        input()
+
+    printgrid()
     print( round," complete rounds were fought" )
+    print( "The outcome is ", outcome(round) )
 
 if __name__ == "__main__":
     main()
