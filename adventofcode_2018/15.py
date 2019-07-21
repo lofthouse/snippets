@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 import os
 import sys
+from copy import copy
 from pprint import pprint
 import heapq
 
@@ -8,6 +9,8 @@ import heapq
 # x,y -> foo[ (y,x) ]
 
 killed_this_round = set()
+elves_killed = False
+
 moves = [ (-1,0),(0,-1),(0,1),(1,0) ]
 walls = set()
 warriors = dict()
@@ -25,11 +28,20 @@ class warrior:
     reachable = dict()
     to_reach_from = []
 
-    def __init__(self,t,loc):
+    def __init__(self,t,loc,a):
         self.type=t
         self.location=loc
+        if t == "E":
+            self.ap = copy(a)
+
+    def __rep__(self):
+        return self.type + " at" + str(self.location) + ": AP=" + str(self.ap) + ", HP=" + str(self.hp)
+
+    def __str__(self):
+        return self.type + " at" + str(self.location) + ": AP=" + str(self.ap) + ", HP=" + str(self.hp)
 
     def attack( self ):
+        global elves_killed
         target = (99999,99999)
         target_hp = hp_max + 1
 
@@ -43,6 +55,8 @@ class warrior:
         warriors[ target ].hp -= self.ap
         if warriors[ target ].hp <= 0:
             killed_this_round.add( target )
+            if self.type == "G":
+                elves_killed = True
             del warriors[ target ]
 
     def findReachable( self ):
@@ -183,40 +197,56 @@ def readfile():
 def main():
     global x
     global y
+    global elves_killed
     global killed_this_round
-    lines = readfile()
-    for j,line in enumerate(lines):
-        for i,element in enumerate(line):
-            if element == ".":
-                pass
-            elif element == "#":
-                walls.add( (j,i) )
-            else:
-                warriors[ (j,i) ] = warrior(element,(j,i))
+    global warriors
+    ap = 3
 
-    x = i + 1
-    y = j + 1
+    while True:
+        elves_killed = False
+        warriors = dict()
 
-    round = 0
+        lines = readfile()
+        for j,line in enumerate(lines):
+            for i,element in enumerate(line):
+                if element == ".":
+                    pass
+                elif element == "#":
+                    walls.add( (j,i) )
+                else:
+                    warriors[ (j,i) ] = warrior(element,(j,i),ap)
 
-    complete = False
+        x = i + 1
+        y = j + 1
+        round = 0
 
-    while not complete:
-        # turns are taking in STARTING order only, so we have to work off a copy of that order
-        turn_order = sorted( list( warriors ))
-        killed_this_round = set()
+        complete = False
 
-        for j,i in turn_order:
-            # (j,i) may have just been killed, so check first before trying to takeTurn!
-            if (j,i) not in killed_this_round and not warriors[ (j,i) ].takeTurn():
-                complete = True
-                break
+        while not complete:
+            # turns are taking in STARTING order only, so we have to work off a copy of that order
+            turn_order = sorted( list( warriors ))
+            killed_this_round = set()
 
-        if not complete:
-            round += 1
+            for j,i in turn_order:
+                # (j,i) may have just been killed, so check first before trying to takeTurn!
+                if (j,i) not in killed_this_round and not warriors[ (j,i) ].takeTurn():
+                    complete = True
+                    break
 
-    print( round," complete rounds were fought" )
-    print( "The outcome is ", outcome(round) )
+            if not complete:
+                round += 1
+
+        if ap == 3 or not elves_killed:
+            print( round," complete rounds were fought" )
+            print( "Elves were ", "NOT" if not elves_killed else "", " killed with attack power", ap )
+            print( "The outcome is ", outcome(round) )
+            print()
+
+        if ap > 3 and not elves_killed:
+            break
+
+        ap += 1
+
 
 if __name__ == "__main__":
     main()
