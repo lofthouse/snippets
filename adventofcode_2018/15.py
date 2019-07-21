@@ -161,28 +161,17 @@ def outcome( r ):
     return r * hp_tot
 
 def printgrid(r):
-#    f=open( '{:02d}'.format(r)+'_me.txt', 'w' )
     for j in range(y):
         for i in range(x):
             if (j,i) in walls:
                 print('#',end='')
-#                f.write('#')
-#            if (j,i) in opens:
             elif (j,i) in warriors:
                 print(warriors[ (j,i) ].type,end='')
-#                f.write(warriors[ (j,i) ].type)
             else:
                 print('.',end='')
-#                f.write('.')
 
         print('  ', end='')
-#        f.write(' ')
-
         print(', '.join( [ warriors[ (j,i) ].type + '(' + str(warriors[ (j,i) ].hp) + ')' for i in range(x) if (j,i) in warriors ] ) )
-#        f.write(', '.join( [ warriors[ (j,i) ].type + '(' + str(warriors[ (j,i) ].hp) + ')' for i in range(x) if (j,i) in warriors ] ) )
-
-#        f.write('\n')
-#    f.close()
 
 
 def readfile():
@@ -192,6 +181,23 @@ def readfile():
 
     with open( sys.argv[1] ) as in_file:
         return in_file.read().splitlines()
+
+def savegrid(r):
+    f=open( '{:02d}'.format(r)+'_round_grid.txt', 'w' )
+
+    for j in range(y):
+        for i in range(x):
+            if (j,i) in walls:
+                f.write('#')
+            elif (j,i) in warriors:
+                f.write(warriors[ (j,i) ].type)
+            else:
+                f.write('.')
+
+        f.write(' ')
+        f.write(', '.join( [ warriors[ (j,i) ].type + '(' + str(warriors[ (j,i) ].hp) + ')' for i in range(x) if (j,i) in warriors ] ) )
+        f.write('\n')
+    f.close()
 
 
 def main():
@@ -209,11 +215,9 @@ def main():
         lines = readfile()
         for j,line in enumerate(lines):
             for i,element in enumerate(line):
-                if element == ".":
-                    pass
-                elif element == "#":
+                if element == "#":
                     walls.add( (j,i) )
-                else:
+                elif element != ".":
                     warriors[ (j,i) ] = warrior(element,(j,i),ap)
 
         x = i + 1
@@ -236,6 +240,9 @@ def main():
             if not complete:
                 round += 1
 
+            if ap > 3 and elves_killed:
+                break
+
         if ap == 3 or not elves_killed:
             print( round," complete rounds were fought" )
             print( "Elves were ", "NOT" if not elves_killed else "", " killed with attack power", ap )
@@ -246,7 +253,6 @@ def main():
             break
 
         ap += 1
-
 
 if __name__ == "__main__":
     main()
