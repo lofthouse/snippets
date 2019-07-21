@@ -7,6 +7,7 @@ import heapq
 # To facilitate reading order, all coordinates are are flipped when storing
 # x,y -> foo[ (y,x) ]
 
+killed_this_round = set()
 moves = [ (-1,0),(0,-1),(0,1),(1,0) ]
 #opens = set()
 walls = set()
@@ -49,6 +50,8 @@ class warrior:
 
         warriors[ target ].hp -= self.ap
         if warriors[ target ].hp <= 0:
+#            print( target, "is dead, killed by", self.location )
+            killed_this_round.add( target )
             del warriors[ target ]
 
     def findReachable( self ):
@@ -93,9 +96,10 @@ class warrior:
         self.findReachable()
 
 #        print( "These are the places I can reach:" )
-#        pprint( self.reachable )
+#        pprint( self.reachable.keys() )
 
         destinations = set(self.reachable.keys()).intersection(self.in_range)
+
 #        print( "These are the places I want to reach:" )
 #        pprint( destinations )
 
@@ -104,8 +108,8 @@ class warrior:
 
         if destinations:
             step = self.reachable[ minpath(destinations,self.reachable) ][0]
-#        print( "My move is to:" )
-#        pprint( step )
+#            print( "My move is to:" )
+#            pprint( step )
             warriors[ step ] = warriors.pop( self.location )
             self.location = step
 
@@ -174,24 +178,33 @@ def outcome( r ):
 
     return r * hp_tot
 
-def printgrid():
+def printgrid(r):
+    f=open( '{:02d}'.format(r)+'_me.txt', 'w' )
     for j in range(y):
         for i in range(x):
             if (j,i) in walls:
-                print('#',end='')
+#                print('#',end='')
+                f.write('#')
 #            if (j,i) in opens:
             elif (j,i) in warriors:
-                print(warriors[ (j,i) ].type,end='')
+#                print(warriors[ (j,i) ].type,end='')
+                f.write(warriors[ (j,i) ].type)
             else:
-                print('.',end='')
+#                print('.',end='')
+                f.write('.')
 
-        print('  ', end='')
+#        print('  ', end='')
+        f.write(' ')
 
-        for i in range(x):
-            if (j,i) in warriors:
-                print(warriors[ (j,i) ].type,'(',warriors[ (j,i) ].hp,'), ',end='')
+        f.write(', '.join( [ warriors[ (j,i) ].type + '(' + str(warriors[ (j,i) ].hp) + ')' for i in range(x) if (j,i) in warriors ] ) )
+#        for i in range(x):
+#            if (j,i) in warriors:
+#                print(warriors[ (j,i) ].type,'(',warriors[ (j,i) ].hp,'), ',end='')
+#                f.write(warriors[ (j,i) ].type + '(' + str(warriors[ (j,i) ].hp) + '), ')
 
-        print('')
+#        print('')
+        f.write('\n')
+    f.close()
 
 
 def readfile():
@@ -206,6 +219,7 @@ def readfile():
 def main():
     global x
     global y
+    global killed_this_round
     lines = readfile()
     for j,line in enumerate(lines):
         for i,element in enumerate(line):
@@ -221,7 +235,7 @@ def main():
     y = j + 1
 
     round = 0
-    printgrid()
+    printgrid(round)
 #    print( round," complete rounds fought so far" )
 #    input()
 
@@ -230,6 +244,7 @@ def main():
     while not complete:
         # turns are taking in STARTING order only, so we have to work off a copy of that order
         turn_order = sorted( list( warriors ))
+        killed_this_round = set()
 #        pprint( turn_order )
 
 #        print( "Here are our warriors:" )
@@ -238,21 +253,20 @@ def main():
 
         for j,i in turn_order:
 #            print( "Time for (",j,",",i,") to take a turn" )
-
             # (j,i) may have just been killed, so check first before trying to takeTurn!
-            if (j,i) in warriors and not warriors[ (j,i) ].takeTurn():
+            if (j,i) not in killed_this_round and not warriors[ (j,i) ].takeTurn():
                 complete = True
                 break
 
         if not complete:
             round += 1
 
-        printgrid()
+        printgrid(round)
 
 #        print( round," complete rounds fought so far" )
 #        input()
 
-    printgrid()
+    printgrid(round)
     print( round," complete rounds were fought" )
     print( "The outcome is ", outcome(round) )
 
