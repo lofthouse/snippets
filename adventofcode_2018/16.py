@@ -66,15 +66,14 @@ def execute( cmd, reg_in, hint ):
                 reg_out[ C ] = 1 if reg_out[ A ] == reg_out[ B ] else 0
             else:
                 reg_out[ C ] = 1 if reg_out[ A ] == B else 0
+    # Total cheat:  this problem can't generate negative numbers, so just return a negative register if we encountered an invalid command for the instruction
     except IndexError:
         reg_out = [-1,-1,-1,-1]
-
 
     return tuple( reg_out )
 
 def part1( data ):
-    print( "Working with ",len( data )," test cases" )
-
+    # opcodes will accumulate all the viable opcode strings for each opcode value
     opcodes = [ set() for i in range(16) ]
     cmds = ['addr','addi','mulr','muli','banr','bani','borr','bori','setr','seti','gtir','gtri','gtrr','eqir','eqri','eqrr']
     three_pluses = 0
@@ -88,10 +87,12 @@ def part1( data ):
         if matches >= 3:
             three_pluses += 1
 
-    print( three_pluses, " samples match 3 or more opcodes" )
+    print( three_pluses, "samples match 3 or more opcodes" )
 
     resolved = set()
 
+    # Solving the opcodes is easy:  just keep eliminating solved codes from other candidate lists until all are solved
+    # We got lucky and no more advanced logic is required
     while any( len(p)>1 for p in opcodes ):
         for q in opcodes:
             if len(q) == 1:
@@ -102,18 +103,17 @@ def part1( data ):
                         if q != r:
                             r.discard( opcode )
 
+    # now the instruction set is just the list of only set members in opcodes
     instructionset = [ list(q)[0] for q in opcodes ]
 
     return( instructionset )
 
 def part2( data, instructionset ):
-    print( "Working with ",len( data )," commands" )
-
     registers = (0,0,0,0)
     for cmd in data:
         registers = execute( cmd, registers, instructionset[ cmd[0] ] )
 
-    print( registers )
+    print( registers[0], "is the final value in register 0" )
 
 def readfile():
     if len(sys.argv) != 2 or not os.path.isfile( sys.argv[1] ):
