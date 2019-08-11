@@ -25,17 +25,6 @@ def readfile():
 
     return (map,h,w)
 
-def mapprint( map, rows, cols ):
-    for j in range(1,rows+1):
-        for i in range(1, cols+1):
-            if map[j][i] == 0:
-                print('.',end='')
-            elif map[j][i] == 1:
-                print('|',end='')
-            elif map[j][i] == 8:
-                print('#',end='')
-        print()
-
 def tick( map,rows,cols ):
     new_map = zeros( (rows+2, cols+2), dtype=int )
 
@@ -58,9 +47,6 @@ def tick( map,rows,cols ):
                     new_map[j][i] = 8
                 else:
                     new_map[j][i] = 0
-            else:
-                print( "LOGIC ERROR" )
-                exit( -1 )
 
     return new_map
 
@@ -71,57 +57,40 @@ def main():
     p2_finished = False
 
     for i in range(1000000000):
-        if p2_finished:
-            shadow_i += 1
-            if shadow_i == cycle_rpt:
-                shadow_i = cycle_bot
+        map = tick( map,rows,cols )
+        hash = ''.join(''.join(str(c) for c in r) for r in map)
+
+        if hash in states:
+            for j,saved_map in enumerate(maps):
+                if array_equal(saved_map,map):
+                    print( "Run index",j,"and index",i,"were the same")
+                    break
+
+            # no offsets for cycle (adjacent numbers have a cycle of 1!)
+            cycle = (i-j)
+            # stores are 0 indexed, so first repeat (j) is the j+1'st time
+            # just add the mod result to j, because it's the offset into the cycle (and thus should be used directly into storage!)
+            index = ( 1000000000 - (j+1) ) % cycle
+            print( "The cycle is",cycle)
+            print( "The 10,000,000,000 tick should be at",index,"into the cycle")
+            print( "The winner should be stored at", j+index )
+            map = maps[ j+index ]
+            p2_finished = True
         else:
-            map = tick( map,rows,cols )
-            hash = ''.join(''.join(str(c) for c in r) for r in map)
+            states.add( hash )
+            maps.append( map )
 
-            if hash in states:
-                print( "Repeat found at index", i )
+        if i == 9 or p2_finished:
+            trees = (map == 1).sum()
+            yards = (map == 8).sum()
 
-                for j,saved_map in enumerate(maps):
-                    if array_equal(saved_map,map):
-                        print( "Run index",j,"and index",i,"were the same")
-                        break
+            print( "Trees:", trees )
+            print( "Yards:", yards )
+            print( "Score:", trees*yards )
 
-                cycle_bot=j
-                cycle_rpt=i
-                cycle = (i-j+1)
-                shadow_i = j
+        if p2_finished:
+            break
 
-                x = j + ( (1000000000-j) % cycle )
-                print( "Winner should be around",x )
-                p2_finished = True
-            else:
-                states.add( hash )
-                maps.append( map )
-
-            if i == 9:
-                trees = (map == 1).sum()
-                yards = (map == 8).sum()
-
-                print( "Trees:", trees )
-                print( "Yards:", yards )
-                print( "Score:", trees*yards )
-
-#        if p2_finished:
-#            for z in range(j,i):
-#                print("Showing map stored at",z)
-#
-#                map = maps[z]
-#                trees = (map == 1).sum()
-#                yards = (map == 8).sum()
-#
-#                print( "Trees:", trees )
-#                print( "Yards:", yards )
-#                print( "Score:", trees*yards )
-#                print()
-#            break
-
-    print( "Shadow_i=",shadow_i )
 
 if __name__ == "__main__":
     main()
