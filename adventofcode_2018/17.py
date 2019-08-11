@@ -63,8 +63,6 @@ def takescan( clay, static, flowing, x_range, y_range ):
                 print( '.', end='' )
         print()
 
-    input()
-
 def neighbors( point ):
     # remember y is positive DOWN
     neighbor_list = [ (-1,0),(0,1),(1,0),(0,-1) ]
@@ -72,10 +70,6 @@ def neighbors( point ):
 
 def flow( origin, clay, static, flowing, falls, x_range, y_range ):
     left,below,right,above = neighbors( origin )
-
-#    print( "Neighbors of",origin,":",neighbors( origin ) )
-#    print( "Static:", sorted(static) )
-#    print( "Flowing:", sorted(flowing) )
 
     # The water either goes down...
     if below not in clay and below not in static:
@@ -143,12 +137,7 @@ def main():
     # our buffer of water sources that need to be resolved
     falls = [ (500,0) ]
 
-#    print( clay )
-#    print( sorted(x_range) )
-#    print( sorted(y_range) )
-
     while falls:
-#        takescan( clay, static, flowing, x_range, y_range )
         flow( falls.pop(), clay, static, flowing, falls, x_range, y_range )
 
     takescan( clay, static, flowing, x_range, y_range )
