@@ -83,7 +83,7 @@ def flow( origin, clay, static, flowing, falls, x_range, y_range ):
         if origin[1] in y_range:
             flowing.add( origin )
         # (but only to the bottom of our world)
-        if below[1] in y_range:
+        if below[1] in y_range or below[1] < min( y_range ):
             falls.append( below )
     # or the water goes to the side
     else:
@@ -144,11 +144,11 @@ def main():
     falls = [ (500,0) ]
 
 #    print( clay )
-#    print( x_range )
-#    print( y_range )
+#    print( sorted(x_range) )
+#    print( sorted(y_range) )
 
     while falls:
-        takescan( clay, static, flowing, x_range, y_range )
+#        takescan( clay, static, flowing, x_range, y_range )
         flow( falls.pop(), clay, static, flowing, falls, x_range, y_range )
 
     takescan( clay, static, flowing, x_range, y_range )
