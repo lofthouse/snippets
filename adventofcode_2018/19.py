@@ -69,35 +69,32 @@ def execute( cmd, reg_in ):
     except IndexError:
         reg_out = [-1,-1,-1,-1]
 
-    if reg_in[0] != reg_out[0]:
-        print( "Register 0 change", cmd, reg_in, reg_out)
+#    if reg_in[0] != reg_out[0]:
+#        print( "Register 0 change", cmd, reg_in, reg_out)
+#        input()
 
-#    return tuple( reg_out )
     return reg_out
 
-def part1( ip_shadow, program, start_state ):
+def part( ip_shadow, program, start_state ):
     registers = start_state
     ip = 0
 
-    while ip < len(program) and all( i>=0 for i in registers ):
-#        dout = "ip=" + str(ip)
-
+#    while ip < len(program) and all( i>=0 for i in registers ):
+    while ip < len(program) and all( i>=0 for i in registers ) and ip != 1:
         registers[ ip_shadow ] = ip
         cmd = program[ ip ]
-
-#        dout += " " + str(registers) + " " + " ".join(str(i) for i in cmd)
-
         registers = execute( cmd, registers )
-
-#        dout += " " + str(registers)
-
         ip = registers[ ip_shadow ]
         ip += 1
 
-#        print( dout )
-#        input( "STEP?" )
-
-    print( registers[0], "is the final value in register 0" )
+#    print( registers )
+#    print( registers[0], "is the final value in register 0" )
+    print( "instead of running me, just add the factors of", registers[2] )
+    dud = 0
+    for i in range( 1, registers[2] + 1 ):
+        if ( i * ( registers[ 2 ] // i ) ) == registers[ 2 ]:
+            dud += i
+    print( "hint:  it's", dud )
 
 def readfile():
     if len(sys.argv) != 2 or not os.path.isfile( sys.argv[1] ):
@@ -120,11 +117,11 @@ def main():
                 scratch = line.split()
                 program.append( ( scratch[0], int(scratch[1]), int(scratch[2]), int(scratch[3]) ) )
 
-#    print( "ip_shadow is", ip_shadow )
-#    print( program )
-
-    part1( ip_shadow, program, [0,0,0,0,0,0] )
-    part1( ip_shadow, program, [1,0,0,0,0,0] )
+# seed registers for fun!
+# put your own input in [2] and then just modify the program to jump to 1 instead of 16 and let the fun begin
+# to see inputs, modify the second line of the program to jump out of bounds
+    part( ip_shadow, program, [0,0,0,0,0,0] )
+    part( ip_shadow, program, [1,0,0,0,0,0] )
 
 
 if __name__ == "__main__":

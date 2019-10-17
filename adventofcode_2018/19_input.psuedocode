@@ -1,37 +1,63 @@
 #ip 5
-0   reg[5] += 16                            addi 5 16 5
+# ALL THIS PROGRAM DOES IS VERY INEFFICIENTLY PRINT THE SUM OF THE FACTORS OF THE INPUT (COMPUTED IN LINES 17+)
+# IT DOES THIS WITHOUT DIVISION...SOOOOO.....
+# REG[4] INCREMENTS FROM 1 TO INPUT WHILE
+# REG[1] LOOPS FROM 1 TO INPUT
+# AND REG[0] INCREMENTS BY REG[4] IF REG[1]*REG[4] == INPUT
+
+0   IP += 16                                addi 5 16 5
+
+# ON FIRST RUN, SKIP TO 16, REST OF WORLD IS HERE
+
 1   reg[4] = 1                              seti 1 0 4
-2   reg[1] = 1                              seti 1 8 1
-3   reg[3] = reg[4] * reg[1]                mulr 4 1 3
-4   if reg[3] == reg[2]: reg[3] = 1 else 0  eqrr 3 2 3
-5   reg[5] += reg[3]                        addr 3 5 5
-6   reg[5] += 1                             addi 5 1 5
-7   reg[0] += reg[4]                        addr 4 0 0
-8   reg[1] += 1                             addi 1 1 1
-9   if reg[1] > reg[2]: reg[3] = 1 else 0   gtrr 1 2 3
-10  reg[5] += reg[3]                        addr 5 3 5
-11  reg[5] = 2                              seti 2 4 5
-12  reg[4] += 1                             addi 4 1 4
-13  if reg[4] > reg[2]: reg[3] = 1 else 0   gtrr 4 2 3
-14  reg[5] += reg[3]                        addr 3 5 5
-15  reg[5] = 1                              seti 1 7 5
-16  reg[5] = reg[5] * reg[5]                mulr 5 5 5
+2   reg[1] = 1                              seti 1 8 1  [2, 1, 10551377, 0, 2, 7]
+3   reg[3] = reg[4] * reg[1]                mulr 4 1 3  [2, 1, 10551377, 4, 2, 7]
+4   if reg[3] == reg[2]: reg[3] = 1 else 0  eqrr 3 2 3  [1, 1, 10551377, 0, 2, 7]
+
+# 977 is prime, so only true when reg[1] = 977 and reg[4] = 1
+# 10551377 = 31 * 107 * 3181 so first true when reg[1] = 340367 and reg[4] = 31
+
+5   IP += reg[3]                            addr 3 5 5  [1, 10551377, 10551377, 1, 1, 7]
+6   IP += 1                                 addi 5 1 5 [2, 2, 10551377, 0, 1, 7]
+
+# When reaching 7 in Part 1, we exit with [1, 977,      977,      1, 1, 7] and terminate with reg[0] = 978
+# When reaching 7 in Part 2, we exit with [1, 10551377, 10551377, 1, 1, 7] and terminate with reg[0] = ???
+
+7   reg[0] += reg[4]                        addr 4 0 0  [2, 10551377, 10551377, 1, 1, 7]
+8   reg[1] += 1                             addi 1 1 1  [2, 10551378, 10551377, 1, 1, 7]
+9   if reg[1] > reg[2]: reg[3] = 1 else 0   gtrr 1 2 3  [2, 10551378, 10551377, 1, 1, 7]
+10  IP += reg[3]                            addr 5 3 5
+11  GOTO 3                                  seti 2 4 5
+
+# exit loop once reg[1] counts up to reg[2]
+
+12  reg[4] += 1                             addi 4 1 4  [2, 10551378, 10551377, 1, 2, 7]
+
+# this is going to do an outer loop on reg[4]++
+
+13  if reg[4] > reg[2]: reg[3] = 1 else 0   gtrr 4 2 3  [2, 10551378, 10551377, 0, 2, 7]
+14  IP += reg[3]                            addr 3 5 5  [2, 10551378, 10551377, 0, 2, 7]
+15  GOTO 2                                  seti 1 7 5
+16  END                                     mulr 5 5 5
+
+# IGNORE THE REST:  ALL IT DOES IS INITIALIZE REG[2]
+
 17  reg[2] += 2                             addi 2 2 2
 18  reg[2] = reg[2] * reg[2]                mulr 2 2 2
-19  reg[2] = reg[2] * reg[5]                mulr 5 2 2
+19  reg[2] = reg[2] * 19                    mulr 5 2 2
 20  reg[2] = reg[2] * 11                    muli 2 11 2
 21  reg[3] += 6                             addi 3 6 3
-22  reg[3] = reg[3] * reg[5]                mulr 3 5 3
+22  reg[3] = reg[3] * 22                    mulr 3 5 3
 23  reg[3] += 9                             addi 3 9 3
 24  reg[2] += reg[3]                        addr 2 3 2
-25  reg[5] += reg[0]                        addr 5 0 5
-26  reg[5] = 0                              seti 0 5 5
-27  reg[3] = reg[5]                         setr 5 9 3
-28  reg[3] = reg[3] * reg[5]                mulr 3 5 3
-29  reg[3] += reg[5]                        addr 5 3 3
-30  reg[3] = reg[3] * reg[5]                mulr 5 3 3
+25  IP += reg[0]                            addr 5 0 5
+26  GOTO 1                                  seti 0 5 5
+27  reg[3] = 27                             setr 5 9 3
+28  reg[3] = reg[3] * 28                    mulr 3 5 3
+29  reg[3] += 29                            addr 5 3 3
+30  reg[3] = reg[3] * 30                    mulr 5 3 3
 31  reg[3] = reg[3] * 14                    muli 3 14 3
-32  reg[3] = reg[3] * reg[5]                mulr 3 5 3
+32  reg[3] = reg[3] * 32                    mulr 3 5 3
 33  reg[2] += reg[3]                        addr 2 3 2
-34  reg[4] = 1                              seti 0 1 0
-35  reg[5] = 0                              seti 0 0 5
+34  reg[0] = 1                              seti 0 1 0
+35  GOTO 1                                  seti 0 0 5
