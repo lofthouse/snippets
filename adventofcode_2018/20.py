@@ -18,20 +18,26 @@ def parse( input_str, n ):
 
     while i < len(input_str):
 #        print( "Outs are now", out )
-#        print( "Now looking at", input_str[i] )
+#        print( "Now looking at", input_str[i], input_str )
 #        input()
 
         if input_str[i] == '(':
             count,sub = parse( input_str[(i+1):], 1 )
-            out_new=[]
-            for j in range( len(sub) ):
-                for k in range( len(out) ):
-                    out_new.append( out[k] + sub[j] )
-#            for j in range( len(out) ):
-#                for s in sub:
-#                    out[j] += s
-            out = out_new
-            i += count
+
+            # if there are any 0-length options, this does not add a shortest path!  IGNORE
+            if len( min(sub, key=len) ) > 0:
+#                print( "mixing", out, "and", sub )
+                out_new=[]
+                for j in range( len(sub) ):
+                    for k in range( len(out) ):
+                        out_new.append( out[k] + sub[j] )
+#                for j in range( len(out) ):
+#                    for s in sub:
+#                        out[j] += s
+                out = out_new
+#            else:
+#                print( "Skipping mix:  0-length path!" )
+            i += count + 1
         elif input_str[i] == '|':
             count,sub = parse( input_str[(i+1):], n )
             for j in range( len(out) ):
@@ -40,6 +46,7 @@ def parse( input_str, n ):
             i += count
         elif input_str[i] == '$' or ( n>0 and input_str[i] == ')' ):
             i += 1
+#            print( "Returning", (i,out) )
             return (i,out)
         elif input_str[i] == '^' or input_str[i] == ')':
             i += 1
@@ -53,8 +60,8 @@ def main():
 
     null,routes = parse( regex[1:], 0 )
 
-    print( routes )
-    print( "The shortest longest path is", len( min(routes, key=len) ) )
+#    print( routes )
+    print( "The shortest longest path is", len( max(routes, key=len) ) )
 
 if __name__ == "__main__":
     main()
