@@ -8,7 +8,7 @@ def readfile():
         sys.exit(1)
 
     with open( sys.argv[1] ) as in_file:
-        return in_file.read().splitlines()[0]
+        return in_file.read().splitlines()
 
 def parse( input_str, n ):
 #    print( "Starting a",n,"-level parse of",input_str)
@@ -27,14 +27,13 @@ def parse( input_str, n ):
             # if there are any 0-length options, this does not add a shortest path!  IGNORE
             if len( min(sub, key=len) ) > 0:
 #                print( "mixing", out, "and", sub )
-                out_new=[]
-                for j in range( len(sub) ):
-                    for k in range( len(out) ):
-                        out_new.append( out[k] + sub[j] )
+
+                new_leg = max(sub, key=len)
+                for j in range( len(out) ):
+                    out[j] += new_leg
 #                for j in range( len(out) ):
 #                    for s in sub:
 #                        out[j] += s
-                out = out_new
 #            else:
 #                print( "Skipping mix:  0-length path!" )
             i += count + 1
@@ -56,12 +55,13 @@ def parse( input_str, n ):
             i += 1
 
 def main():
-    regex = readfile()
+    regexes = readfile()
 
-    null,routes = parse( regex[1:], 0 )
+    for regex in regexes:
+        null,routes = parse( regex[1:], 0 )
 
-#    print( routes )
-    print( "The shortest longest path is", len( max(routes, key=len) ) )
+        print( routes )
+        print( "The shortest longest path is", len( max(routes, key=len) ) )
 
 if __name__ == "__main__":
     main()
