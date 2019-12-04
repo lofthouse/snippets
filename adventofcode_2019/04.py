@@ -2,20 +2,7 @@
 import os
 import sys
 
-def test1(c):
-    e = [ int(i) for i in str(c) ]
-
-    passed = False
-
-    for j in range( len(e) - 1 ):
-        if e[j] == e[j+1]:
-            passed = True
-        if e[j] > e[j+1]:
-            return False
-
-    return passed
-
-def test2(c):
+def test(c,Part2):
     e = [ int(i) for i in str(c) ]
     max = len(e)
 
@@ -27,14 +14,17 @@ def test2(c):
 
     for j in range( max - 1 ):
         if e[j] == e[j+1]:
-            if j < max-2 and e[j+1] == e[j+2]:
-                passed = False
-                bad_digit = e[j]
-                if good_digit == bad_digit:
-                    good_digit = ''
-            elif e[j] != bad_digit:
+            if not Part2:
                 passed = True
-                good_digit = e[j]
+            else:
+                if j < max-2 and e[j+1] == e[j+2]:
+                    passed = False
+                    bad_digit = e[j]
+                    if good_digit == bad_digit:
+                        good_digit = ''
+                elif e[j] != bad_digit:
+                    passed = True
+                    good_digit = e[j]
         if e[j] > e[j+1]:
             return False
 
@@ -48,9 +38,9 @@ def main():
     valid2 = 0
 
     for i in range( 273025, 767253+1 ):
-        if test1(i):
+        if test(i,False):
             valid1 += 1
-        if test2(i):
+        if test(i,True):
             valid2 += 1
 
     print( "There are", valid1, "part 1 passwords" )
