@@ -14,11 +14,9 @@ def readfile():
         return input_file.read().splitlines()
 
 def run( punchcard, id, next ):
-    if args.verbose:
-        print( "Thread", id, "starting!" )
+    global last_E
 
     stack = [ int(i) for i in punchcard.split(",") ]
-
     i = 0
 
     while stack[i] != 99:
@@ -44,9 +42,8 @@ def run( punchcard, id, next ):
 
         elif op == 3:
             o = stack[i+1]
+
             stack[o] = queues[ id ].get()
-            if args.verbose:
-                print( "Thread", id, "here receiving", stack[o] )
             queues[ id ].task_done()
 
             i += 2
@@ -55,9 +52,10 @@ def run( punchcard, id, next ):
             o = stack[i+1]
             modes,om = divmod( modes, 10 )
 
-            if args.verbose:
-                print( "Thread", id, "here sending along", stack[o] if om==0 else o )
             queues[ next ].put( stack[o] if om==0 else o )
+
+            if id=="E":
+                last_E = stack[o] if om==0 else o
 
             i += 2
 
@@ -116,26 +114,25 @@ def run( punchcard, id, next ):
 
 def main():
     lines = readfile()
+    amps = list( "ABCDE" )
+    phases = [5,6,7,8,9]
 
     for line in lines:
         results = {}
-        for perm in permutations( [5,6,7,8,9] ):
-            threads = {}
+        for perm in permutations( phases ):
             global queues
             global alive
-            queues = { "A":Queue(), "B":Queue(), "C":Queue(), "D":Queue(), "E":Queue() }
-            queues[ "A" ].put( perm[0] )
-            queues[ "B" ].put( perm[1] )
-            queues[ "C" ].put( perm[2] )
-            queues[ "D" ].put( perm[3] )
-            queues[ "E" ].put( perm[4] )
+            global last_E
 
-            alive = { "A":Queue(), "B":Queue(), "C":Queue(), "D":Queue(), "E":Queue() }
-            alive[ "A" ].put( True )
-            alive[ "B" ].put( True )
-            alive[ "C" ].put( True )
-            alive[ "D" ].put( True )
-            alive[ "E" ].put( True )
+            threads = {}
+            queues = {}
+            alive = {}
+
+            for amp,phase in zip(amps,perm):
+                queues[ amp ] = Queue()
+                queues[ amp ].put( phase )
+                alive[ amp ] = Queue()
+                alive[ amp ].put( True )
 
             threads[ "A" ] = Thread(target=run, args=( line, "A", "B" ) )
             threads[ "B" ] = Thread(target=run, args=( line, "B", "C" ) )
@@ -148,22 +145,18 @@ def main():
 
             queues[ "A" ].put(0)
 
+            # Each thread will clear its alive queue:  wait for all to empty!
             for a in alive:
                 alive[a].join()
 
-            if args.verbose:
-                print( "All threads should be dead now" )
-
+            # ... then wait for all thread to exit so we don't have stagglers tampering with the next round!
             for t in threads:
                 threads[t].join()
 
-#            print( queues )
-#            out = run( line, phase, out )
-#            print( perm, "==>", out )
-#            results[ out ] = perm
-#        win = max( results )
+            results[ last_E ] = perm
+        win = max( results )
 
-#        print( results[ win ], "===>", win )
+        print( results[ win ], "===>", win )
 
 if __name__ == "__main__":
     main()
