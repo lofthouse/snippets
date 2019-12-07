@@ -1,6 +1,8 @@
 #! /usr/bin/env python3
 import argparse
 from itertools import permutations
+from threading import Thread, enumerate
+from queue import Queue
 
 parser = argparse.ArgumentParser(description='Advent of Code 2019 Day N')
 parser.add_argument('input_file', type=argparse.FileType('r'))
@@ -11,8 +13,10 @@ def readfile():
     with args.input_file as input_file:
         return input_file.read().splitlines()
 
-def run( punchcard, a, b):
-    inputs = [ b, a ]
+def run( punchcard, id, next ):
+    if args.verbose:
+        print( "Thread", id, "starting!" )
+
     stack = [ int(i) for i in punchcard.split(",") ]
 
     i = 0
@@ -40,7 +44,10 @@ def run( punchcard, a, b):
 
         elif op == 3:
             o = stack[i+1]
-            stack[o] = inputs.pop()
+            stack[o] = queues[ id ].get()
+            if args.verbose:
+                print( "Thread", id, "here receiving", stack[o] )
+            queues[ id ].task_done()
 
             i += 2
 
@@ -48,7 +55,9 @@ def run( punchcard, a, b):
             o = stack[i+1]
             modes,om = divmod( modes, 10 )
 
-            return stack[o] if om==0 else o
+            if args.verbose:
+                print( "Thread", id, "here sending along", stack[o] if om==0 else o )
+            queues[ next ].put( stack[o] if om==0 else o )
 
             i += 2
 
@@ -102,20 +111,59 @@ def run( punchcard, a, b):
             print( "FATAL ERROR: opcode", stack[i], "at", i )
             print( stack )
 
+    alive[ id ].get()
+    alive[ id ].task_done()
+
 def main():
     lines = readfile()
 
     for line in lines:
         results = {}
-        for perm in permutations( [0,1,2,3,4] ):
-            out = 0
-            for phase in perm:
-                out = run( line, phase, out )
-#            print( perm, "==>", out )
-            results[ out ] = perm
-        win = max( results )
+        for perm in permutations( [5,6,7,8,9] ):
+            threads = {}
+            global queues
+            global alive
+            queues = { "A":Queue(), "B":Queue(), "C":Queue(), "D":Queue(), "E":Queue() }
+            queues[ "A" ].put( perm[0] )
+            queues[ "B" ].put( perm[1] )
+            queues[ "C" ].put( perm[2] )
+            queues[ "D" ].put( perm[3] )
+            queues[ "E" ].put( perm[4] )
 
-        print( results[ win ], "===>", win )
+            alive = { "A":Queue(), "B":Queue(), "C":Queue(), "D":Queue(), "E":Queue() }
+            alive[ "A" ].put( True )
+            alive[ "B" ].put( True )
+            alive[ "C" ].put( True )
+            alive[ "D" ].put( True )
+            alive[ "E" ].put( True )
+
+            threads[ "A" ] = Thread(target=run, args=( line, "A", "B" ) )
+            threads[ "B" ] = Thread(target=run, args=( line, "B", "C" ) )
+            threads[ "C" ] = Thread(target=run, args=( line, "C", "D" ) )
+            threads[ "D" ] = Thread(target=run, args=( line, "D", "E" ) )
+            threads[ "E" ] = Thread(target=run, args=( line, "E", "A" ) )
+
+            for t in threads:
+                threads[t].start()
+
+            queues[ "A" ].put(0)
+
+            for a in alive:
+                alive[a].join()
+
+            if args.verbose:
+                print( "All threads should be dead now" )
+
+            for t in threads:
+                threads[t].join()
+
+#            print( queues )
+#            out = run( line, phase, out )
+#            print( perm, "==>", out )
+#            results[ out ] = perm
+#        win = max( results )
+
+#        print( results[ win ], "===>", win )
 
 if __name__ == "__main__":
     main()
