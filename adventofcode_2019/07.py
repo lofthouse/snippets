@@ -115,48 +115,50 @@ def run( punchcard, id, next ):
 def main():
     lines = readfile()
     amps = list( "ABCDE" )
-    phases = [5,6,7,8,9]
+    nexts = list( "BCDEA" )
 
     for line in lines:
-        results = {}
-        for perm in permutations( phases ):
-            global queues
-            global alive
-            global last_E
+        for part in [1,2]:
+            results = {}
 
-            threads = {}
-            queues = {}
-            alive = {}
+            if part == 1:
+                phases = [0,1,2,3,4]
+            else:
+                phases = [5,6,7,8,9]
 
-            for amp,phase in zip(amps,perm):
-                queues[ amp ] = Queue()
-                queues[ amp ].put( phase )
-                alive[ amp ] = Queue()
-                alive[ amp ].put( True )
+            for perm in permutations( phases ):
+                global queues
+                global alive
+                global last_E
 
-            threads[ "A" ] = Thread(target=run, args=( line, "A", "B" ) )
-            threads[ "B" ] = Thread(target=run, args=( line, "B", "C" ) )
-            threads[ "C" ] = Thread(target=run, args=( line, "C", "D" ) )
-            threads[ "D" ] = Thread(target=run, args=( line, "D", "E" ) )
-            threads[ "E" ] = Thread(target=run, args=( line, "E", "A" ) )
+                threads = {}
+                queues = {}
+                alive = {}
 
-            for t in threads:
-                threads[t].start()
+                for amp,next, phase in zip(amps,nexts,perm):
+                    queues[ amp ] = Queue()
+                    queues[ amp ].put( phase )
+                    alive[ amp ] = Queue()
+                    alive[ amp ].put( True )
+                    threads[ amp ] = Thread(target=run, args=( line, amp, next ) )
 
-            queues[ "A" ].put(0)
+                for t in threads:
+                    threads[t].start()
 
-            # Each thread will clear its alive queue:  wait for all to empty!
-            for a in alive:
-                alive[a].join()
+                queues[ "A" ].put(0)
 
-            # ... then wait for all thread to exit so we don't have stagglers tampering with the next round!
-            for t in threads:
-                threads[t].join()
+                # Each thread will clear its alive queue:  wait for all to empty!
+                for a in alive:
+                    alive[a].join()
 
-            results[ last_E ] = perm
-        win = max( results )
+                # ... then wait for all thread to exit so we don't have stagglers tampering with the next round!
+                for t in threads:
+                    threads[t].join()
 
-        print( results[ win ], "===>", win )
+                results[ last_E ] = perm
+            win = max( results )
+
+            print( "Part", part, ":", results[ win ], "===>", win )
 
 if __name__ == "__main__":
     main()
