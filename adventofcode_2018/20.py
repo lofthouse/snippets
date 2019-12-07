@@ -1,6 +1,11 @@
 #! /usr/bin/env python3
 import os
 import sys
+import networkx as nx
+
+### HI TREVOR!
+# the below kinda really did not work, but was a valiant effort
+# you need to redo this as a graph (use nx!) then you can simply call shortest_path_length(graph,origin,destination)
 
 def readfile():
     if len(sys.argv) != 2 or not os.path.isfile( sys.argv[1] ):
