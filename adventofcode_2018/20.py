@@ -3,10 +3,6 @@ import os
 import sys
 import networkx as nx
 
-### HI TREVOR!
-# the below kinda really did not work, but was a valiant effort
-# you need to redo this as a graph (use nx!) then you can simply call shortest_path_length(graph,origin,destination)
-
 moves = {'N':(0,1), 'E':(1,0), 'S':(0,-1), 'W':(-1,0) }
 
 def readfile():
@@ -21,8 +17,6 @@ def readfile():
 # starting from origin.  Returns the index of the end of the parsable section
 # (e.g. when it ran into a closing ')' it didn't start
 def parse( input_str, origin, in_paren ):
-#    print( "Starting a",n,"-level parse of",input_str)
-
     i = 0
     this_room = origin
 
@@ -38,10 +32,6 @@ def parse( input_str, origin, in_paren ):
         elif input_str[i] == '$' or ( in_paren and input_str[i] == ')' ):
             i += 1
             return i
-
-        # this case ... shouldn't exist?
-        elif input_str[i] == '^' or input_str[i] == ')':
-            i += 1
 
         else:
             new_room = tuple( [ a+b for a,b in zip(this_room,moves[ input_str[i] ]) ] )
@@ -61,23 +51,9 @@ def main():
         parse( regex[1:], (0,0), 0 )
         print( "Parsing complete" )
 
-        furthest_node = ''
-        furthest_path = 0
-        path_over_1000 = 0
-
-        for node in graph.nodes:
-            print( "Calculating path to", node, "...\r", end='' )
-            this_path = nx.shortest_path_length(graph,(0,0),node)
-
-            if this_path > furthest_path:
-                furthest_path = this_path
-                furthest_node = node
-
-            if this_path >= 1000:
-                path_over_1000 += 1
-
-        print( "The shortest longest path is", furthest_path, "to reach", furthest_node )
-        print( "There are", path_over_1000, "rooms at least 1000 doors away" )
+        paths = nx.shortest_path_length( graph, (0,0) )
+        print( "The shortest longest path is", max( paths.values() ) )
+        print( "There are", sum( [ 1 for i in paths.values() if i >= 1000 ] ), "rooms at least 1000 doors away" )
 
 if __name__ == "__main__":
     main()
