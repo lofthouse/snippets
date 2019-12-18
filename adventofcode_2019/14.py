@@ -77,15 +77,23 @@ def main():
     ore_req,_ = ore_to_make( 'FUEL', 1, reactions, balances )
     print( "Part 1:  we need", ore_req, "ore" )
 
+    # we're going to estimate the fuel we can make, then sneak up on it
+    prev_fuel = 1
     fuel = 1000000000000 // ore_req
+    ore_req,_ = ore_to_make( 'FUEL', fuel, reactions, balances )
     descending = False
     over_fuel = False
 
     while descending or ore_req <= 1000000000000:
         balances = {}
 
-        if not descending:
-            fuel += 1000
+        # as long as we aren't falling between integers, recalculate
+        if not descending and prev_fuel != fuel:
+            prev_fuel = fuel
+            fuel = 1000000000000 * fuel // ore_req
+        # otherwise, creep
+        elif not descending:
+            fuel += 1
         else:
             fuel -= 1
 
@@ -97,6 +105,7 @@ def main():
         if ore_req > 1000000000000:
             descending = True
 
+        # we only call it victory when we step under the threshold
         if descending and ore_req <= 1000000000000:
             break
 
