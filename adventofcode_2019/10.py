@@ -29,6 +29,10 @@ def readfile():
 def heading( origin, dest ):
     return (pi/2 + atan2( dest[1]-origin[1],dest[0]-origin[0] )) % (2*pi)
 
+# for part 1, we just use a set to record the headings
+# duplicates (e.g. invisible) dissappear!
+# this ends up about 15x as fast as doing the full part 2 method
+# for every possible home and then continuing with the winner
 def part_1( asteroids ):
     vis_counts = defaultdict( list )
 
@@ -37,8 +41,6 @@ def part_1( asteroids ):
 
         for other in asteroids:
             if other != home:
-                # just blindly store heading of all other vectors
-                # duplicates (e.g. invisible) disappear into the same basis
                 visible.add( heading( home, other ) )
 
         vis_counts[ len( visible ) ].append( home )
