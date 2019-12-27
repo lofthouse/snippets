@@ -1,8 +1,9 @@
 #! /usr/bin/env python3
 import argparse
-import numpy as np
-from pprint import pprint
-from itertools import combinations
+import operator
+from functools import reduce
+from numpy import array
+
 
 parser = argparse.ArgumentParser(description='Advent of Code 2019 Day 12')
 parser.add_argument('input_file', type=argparse.FileType('r'))
@@ -10,78 +11,97 @@ parser.add_argument("-v", "--verbose", help="Include (useful) debug messages",ac
 parser.add_argument("n", type=int, help="the number of steps to stop at")
 args = parser.parse_args()
 
-class moon:
-    def __init__(self, x, y, z):
-        self.p = np.array( (x,y,z) )
-        self.v = np.array( (0,0,0) )
-
-    def apply_g(self, target):
-        for i in range(3):
-            d = -1 if (target.p[i] < self.p[i]) else \
-                0 if (target.p[i] == self.p[i]) else \
-                1
-            target.v[i] -= d
-            self.v[i] += d
-
-    def apply_v(self):
-        self.p += self.v
-
-    def energy(self):
-        pot = sum( [ abs(i) for i in self.p ] )
-        kin = sum( [ abs(i) for i in self.v ] )
-        if args.verbose:
-            print( "pot: %3d;   kin: %3d;   total: %d" % (pot, kin, pot*kin) )
-        return pot*kin
-
-    def __repr__(self):
-        return "pos=<x=%3d, y=%3d, z=%3d>, vel=<x=%3d, y=%3d, z=%3d>" % (self.p[0],self.p[1],self.p[2],self.v[0],self.v[1],self.v[2])
-
 def readfile():
     with args.input_file as input_file:
         return input_file.read().splitlines()
 
-def state( moons ):
-    return [ tuple( np.concatenate( [m.p,m.v] ) ) for m in moons ]
+# Stolen from https://stackoverflow.com/questions/15347174/python-finding-prime-factors
+def prime_factors( n ):
+    i = 2
+    factors = []
+    while i * i <= n:
+        if n % i:
+            i += 1
+        else:
+            n //= i
+            factors.append(i)
+    if n > 1:
+        factors.append(n)
+
+    return factors
 
 def main():
-    moons=[]
+    print( "WARNING:  this will take about a minute to run.  Ctrl-C to give up..." )
+
+    axes = [ 'x', 'y', 'z' ]
+    p = { 'x': array([0,0,0,0]), 'y': array([0,0,0,0]), 'z': array([0,0,0,0]) }
+    v = { 'x': array([0,0,0,0]), 'y': array([0,0,0,0]), 'z': array([0,0,0,0]) }
+
     lines = readfile()
     # format: <x=-1, y=0, z=2>
-    for line in lines:
+    for i,line in enumerate(lines):
         x,y,z = [ int( l.strip(" xyz=") ) for l in line.strip("<>").split(",") ]
-        moons.append( moon( x,y,z ) )
+        p['x'][i] = x
+        p['y'][i] = y
+        p['z'][i] = z
 
-    i_state = state( moons )
-    pprint( moons )
 
-    step = 0
-    cycles = {}
+    pot = array([0,0,0,0])
+    kin = array([0,0,0,0])
+    pf = {}
 
-    while len( cycles ) < 3:
-#    for step in range( args.n ):
-        for a,b in combinations( moons, 2 ):
-            a.apply_g( b )
-        for m in moons:
-            m.apply_v()
+    for axis in axes:
+        i_p_state = tuple( p[axis] )
 
-        if args.verbose:
-            print( "After", step+1, "steps:" )
-            pprint( moons )
+        step = 0
+        cycled = False
 
-        step += 1
-        if step == args.n:
-            E = 0
-            for m in moons:
-                E += m.energy()
+        while not cycled:
+            for m in range(4):
+                v[axis][m] -= sum( p[axis] < p[axis][m] )
+                v[axis][m] += sum( p[axis] > p[axis][m] )
+            p[axis] += v[axis]
 
-            print( "Sum of total energy: ", E )
+            step += 1
 
-        c_state = state( moons )
-        for i in range(3):
-            if c_state[i] == i_state[i]:
-                print( "Found cycle after", step, "steps for axis", i )
-                cycles[i] = step
-                pprint( moons )
+            if args.verbose:
+                print( "After", step, "steps:" )
+                pprint( p )
+                pprint( v )
+
+            if step == args.n:
+                pot += abs( p[axis] )
+                kin += abs( v[axis] )
+
+            if all( v[axis] == 0 ):
+                if tuple( p[axis] ) == i_p_state:
+                    print( "Found cycle after", step, "steps for axis", axis )
+                    cycled = True
+
+        pf[ axis ] = prime_factors( step )
+
+    print( "Total Energy at step %d: %d" % (args.n, sum( [ a*b for a,b in zip(pot,kin) ] ) ) )
+
+    answer_factors = []
+    # Kludgy, but it works.  Basically hardcoding the "take out any common factor in 2 or more numbers"
+    # rule to find the LCM by doing x-y-z, then y-z
+    for factor in pf[ 'x' ]:
+        if factor in pf[ 'y' ] or factor in pf['z']:
+            try:
+                pf[ 'y' ].remove( factor )
+                pf[ 'z' ].remove( factor )
+            except IndexError:
+                pass
+        answer_factors.append( factor )
+
+    for factor in pf[ 'y' ]:
+        if factor in pf['z']:
+                pf[ 'z' ].remove( factor )
+        answer_factors.append( factor )
+
+    answer_factors += pf[ 'z' ]
+
+    print( "The universe returns to the starting state after", reduce(operator.mul, answer_factors, 1), "steps" )
 
 
 if __name__ == "__main__":
