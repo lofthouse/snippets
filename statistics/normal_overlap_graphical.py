@@ -49,4 +49,5 @@ area = norm.cdf(r,m2,std2) + (1.-norm.cdf(r,m1,std1))
 annotation += "Overlap is {:.0%}".format(area)
 plt.text(0.02,0.98,annotation, transform=ax.transAxes, verticalalignment='top' )
 
+ax.tick_params(labelleft=False)
 plt.show()
