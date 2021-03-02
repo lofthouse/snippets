@@ -12,7 +12,7 @@ def solve(m1,m2,std1,std2):
   c = m1**2 /(2*std1**2) - m2**2 / (2*std2**2) - np.log(std2/std1)
   return np.roots([a,b,c])
 
-inputs = ["Mean A: ", "StdDev A: ", "Mean B: ", "StdDev B: "]
+inputs = ["Mean A: ", "StdDev A: ", "Mean B: ", "StdDev B: ", "Mean C: ", "StdDev C: "]
 ins = []
 
 for i in range( len( inputs ) ):
@@ -21,32 +21,40 @@ for i in range( len( inputs ) ):
 one = 0 if ins[0] < ins[2] else 2
 two = 2 - one
 
+one = one if ins[one] < ins[4] else 4
+three = 4 - one
+
 m1 = ins[one]
 std1 = ins[one+1]
 m2 = ins[two]
 std2 = ins[two+1]
-mstd = max(std1, std2)
+m3 = ins[three]
+std3 = ins[three+1]
+
+mstd = max(std1, std2, std3)
 
 annotation = "A:  mu=%0.1f, std=%0.1f\n" % (m1, std1)
 annotation += "B:  mu=%0.1f, std=%0.1f\n" % (m2, std2)
+annotation += "C:  mu=%0.1f, std=%0.1f\n" % (m3, std3)
 
 #Get point of intersect
-result = solve(m1,m2,std1,std2)
+#result = solve(m1,m2,std1,std2)
 
 #Get point on surface
-x = np.linspace(m1-3*mstd,m2+3*mstd,10000)
+x = np.linspace(max(m1-3*mstd,0),m2+3*mstd,10000)
 plot1=plt.plot(x,norm.pdf(x,m1,std1))
 plot2=plt.plot(x,norm.pdf(x,m2,std2))
-plot3=plt.plot(result,norm.pdf(result,m1,std1),'o')
+plot2=plt.plot(x,norm.pdf(x,m3,std3))
+#plot3=plt.plot(result,norm.pdf(result,m1,std1),'o')
 
 #Plots integrated area
-r = result[0]
-olap = plt.fill_between(x[x>r], 0, norm.pdf(x[x>r],m1,std1),alpha=0.3)
-olap = plt.fill_between(x[x<r], 0, norm.pdf(x[x<r],m2,std2),alpha=0.3)
+#r = result[0]
+#olap = plt.fill_between(x[x>r], 0, norm.pdf(x[x>r],m1,std1),alpha=0.3)
+#olap = plt.fill_between(x[x<r], 0, norm.pdf(x[x<r],m2,std2),alpha=0.3)
 
 # integrate
-area = norm.cdf(r,m2,std2) + (1.-norm.cdf(r,m1,std1))
-annotation += "Overlap is {:.0%}".format(area)
+#area = norm.cdf(r,m2,std2) + (1.-norm.cdf(r,m1,std1))
+#annotation += "Overlap is {:.0%}".format(area)
 plt.text(0.02,0.98,annotation, transform=ax.transAxes, verticalalignment='top' )
 
 ax.tick_params(labelleft=False)
