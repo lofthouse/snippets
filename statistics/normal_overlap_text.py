@@ -3,9 +3,9 @@
 from statistics import NormalDist
 
 inputs = ["Mean A: ", "StdDev A: ", "Mean B: ", "StdDev B: "]
-ins = []
 
 while True:
+    ins = []
     for i in range( len( inputs ) ):
         ins.append( float( input( inputs[i] ) ) )
 
