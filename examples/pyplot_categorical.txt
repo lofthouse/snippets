@@ -1,0 +1,66 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+a = pd.DataFrame( { "TimeStamp": ['2020-01-01 01:01:01', '2020-01-01 01:01:02', '2020-01-01 01:01:03', '2020-01-01 01:01:04', '2020-01-01 01:01:05'], "Data":[None,"foo","bar","bar","foo"] } )
+a[ "TimeStamp" ] = pd.to_datetime(a[ "TimeStamp" ])
+fig, ax = plt.subplots()
+ax.plot( a["TimeStamp"], a["Data"], label="FooBar" )
+
+>>> import pandas as pd
+>>> import matplotlib.pyplot as plt
+>>> a = pd.DataFrame( { "TimeStamp": ['2020-01-01 01:01:01', '2020-01-01 01:01:02', '2020-01-01 01:01:03', '2020-01-01 01:01:04', '2020-01-01 01:01:05'], "Data":[None,"foo","bar","bar","foo"] } )
+>>> a[ "TimeStamp" ] = pd.to_datetime(a[ "TimeStamp" ])
+>>> fig, ax = plt.subplots()
+>>> ax.plot( a["TimeStamp"], a["Data"], label="FooBar" )
+/usr/local/lib/python3.7/site-packages/pandas/plotting/_matplotlib/converter.py:103: FutureWarning: Using an implicitly registered datetime converter for a matplotlib plotting method. The converter was registered by pandas on import. Future versions of pandas will require you to explicitly register matplotlib converters.
+
+To register the converters:
+    >>> from pandas.plotting import register_matplotlib_converters
+    >>> register_matplotlib_converters()
+  warnings.warn(msg, FutureWarning)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/usr/local/lib/python3.7/site-packages/matplotlib/axes/_axes.py", line 1667, in plot
+    self.add_line(line)
+  File "/usr/local/lib/python3.7/site-packages/matplotlib/axes/_base.py", line 1902, in add_line
+    self._update_line_limits(line)
+  File "/usr/local/lib/python3.7/site-packages/matplotlib/axes/_base.py", line 1924, in _update_line_limits
+    path = line.get_path()
+  File "/usr/local/lib/python3.7/site-packages/matplotlib/lines.py", line 1027, in get_path
+    self.recache()
+  File "/usr/local/lib/python3.7/site-packages/matplotlib/lines.py", line 675, in recache
+    y = _to_unmasked_float_array(yconv).ravel()
+  File "/usr/local/lib/python3.7/site-packages/matplotlib/cbook/__init__.py", line 1390, in _to_unmasked_float_array
+    return np.asarray(x, float)
+  File "/usr/local/lib/python3.7/site-packages/numpy/core/numeric.py", line 501, in asarray
+    return array(a, dtype, copy=False, order=order)
+ValueError: could not convert string to float: 'foo'
+>>> print( a["Data"][0] )
+None
+>>> a["Data"][0] = " "
+__main__:1: SettingWithCopyWarning:
+A value is trying to be set on a copy of a slice from a DataFrame
+
+See the caveats in the documentation: http://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+>>> a
+            TimeStamp Data
+0 2020-01-01 01:01:01
+1 2020-01-01 01:01:02  foo
+2 2020-01-01 01:01:03  bar
+3 2020-01-01 01:01:04  bar
+4 2020-01-01 01:01:05  foo
+>>> print( a["Data"][0] )
+
+>>> ax.plot( a["TimeStamp"], a["Data"], label="FooBar" )
+[<matplotlib.lines.Line2D object at 0x120cbeb00>]
+>>> plt.show()
+>>> a.loc[ 0,"Data" ] = ""
+>>> a
+            TimeStamp Data
+0 2020-01-01 01:01:01
+1 2020-01-01 01:01:02  foo
+2 2020-01-01 01:01:03  bar
+3 2020-01-01 01:01:04  bar
+4 2020-01-01 01:01:05  foo
+>>> ax.plot( a["TimeStamp"], a["Data"], label="FooBar" )
+[<matplotlib.lines.Line2D object at 0x11d023c50>]
+>>> plt.show()

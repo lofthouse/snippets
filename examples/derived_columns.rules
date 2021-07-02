@@ -1,0 +1,15 @@
+# One rule per line
+# rules MAY reference previously derived columns, so rule order matters
+# rule format:  <new column> = <A> <operator> <B>
+#   where:
+#       <A>,<B> may be either a column name or a constant (integer or float)
+#       <operator> may be one of +, -, *, /, //
+#       See python's 'operator' module for documentation
+#
+# Column names should be quoted if they contain operators or spaces
+"Foo + Bar" = Foo + Bar
+"Foo - Bar" = Foo - Bar
+"Foo * Bar" = Foo * Bar
+"Foo / Bar" = Foo / Bar
+"Foo + Foo" = Foo + Foo
+"12 * (Foo + Foo)" = 12 * "Foo + Foo"
