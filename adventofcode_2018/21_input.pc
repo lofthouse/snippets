@@ -1,29 +1,45 @@
 #ip 2
-# ON FIRST RUN, SET REGISTER 5 TO 1
+# Junk tests
 0   reg[5] =            0b001111011                 seti 123 0 5
 1   reg[5] = reg[5] &   0b111001000                 bani 5 456 5
 2   reg[5] = reg[5] ==  0b001001000                 eqri 5 72 5
-
-# JUMP by value of reg[5] (+1 because of the instructions)
 3   reg[2] = reg[5] + reg[2]                        addr 5 2 2
 4   reg[2] = 0                                      seti 0 0 2
 
-# Always start here
+# Always start here, effectively
 5   reg[5] = 0                                      seti 0 9 5
-6   reg[3] = reg[5] | 0b10000000000000000           bori 5 65536 3
-7   reg[5] = 0b11100111100000110101100              seti 7586220 4 5
-8   reg[1] = reg[3] & 0b11111111                    bani 3 255 1
+
+# Each Outer Loop starts here
+# reg[5] = reg[5] + reg[5] % 256
+6   reg[3] = reg[5] | 0b00000010000000000000000     bori 5 65536 3
+7   reg[5] =          0b11100111100000110101100     seti 7586220 4 5
+
+# Each Inner Loop starts here
+8   reg[1] = reg[3] & 0b00000000000000011111111     bani 3 255 1
 9   reg[5] = reg[5] + reg[1]                        addr 5 1 5
 10  reg[5] = reg[5] & 0b111111111111111111111111    bani 5 16777215 5
 11  reg[5] = reg[5] * 65899                         muli 5 65899 5
 12  reg[5] = reg[5] & 0b111111111111111111111111    bani 5 16777215 5
+
+# If reg[3] < 256, GOTO to end loop test at 28
+# else, reg[3] = reg[3] / 256 (GOTO 17 giant block)
 13  reg[1] = 256 > reg[3]                           gtir 256 3 1
 14  reg[2] = reg[1] + reg[2]                        addr 1 2 2
 15  reg[2] = reg[2] + 1                             addi 2 1 2
 16  reg[2] = 27                                     seti 27 9 2
+
+# All this does from 17-27 is increment reg[1] until it = reg[3] / 256
+# then reassign reg[3] that value
 17  reg[1] = 0                                      seti 0 9 1
 18  reg[4] = reg[1] + 1                             addi 1 1 4
 19  reg[4] = reg[4] * 256                           muli 4 256 4
+
+# if reg[4] > reg[3]:
+#   reg[3] = reg[1]
+#   GOTO 8
+# else
+#   reg[1]++
+#   GOTO 18
 20  reg[4] = reg[4] > reg[3]                        gtrr 4 3 4
 21  reg[2] = reg[4] + reg[2]                        addr 4 2 2
 22  reg[2] = reg[2] + 1                             addi 2 1 2
@@ -33,7 +49,7 @@
 26  reg[3] = reg[1]                                 setr 1 6 3
 27  reg[2] = 7                                      seti 7 8 2
 
-# END if reg[5] matches reg[0], ELSE restart at line 5
+# END if reg[5] matches reg[0], ELSE restart at line 6
 28  reg[1] = reg[5] == reg[0]                       eqrr 5 0 1
 29  reg[2] = reg[1] + reg[2]                        addr 1 2 2
 30  reg[2] = 5                                      seti 5 0 2

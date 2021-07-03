@@ -2,7 +2,15 @@
 import os
 import sys
 
+p1 = False
+iterations = 1
+seen = set()
+
 def execute( cmd, reg_in ):
+    global p1
+    global iterations
+    global seen
+
     reg_out = list( reg_in )
 
     command,A,B,C = cmd
@@ -63,7 +71,17 @@ def execute( cmd, reg_in ):
         elif cmd_mode == 'eqr':
             if reg_mode:
                 reg_out[ C ] = 1 if reg_out[ A ] == reg_out[ B ] else 0
-                print( f"Testing reg[{A}] with value {reg_out[A]} against reg[{B}] with value {reg_out[B]}")
+                if not p1:
+                    print( f"Part 1: {reg_out[A]}")
+                    p1 = True
+                else:
+                    print( f"{iterations}\r", end='' )
+                if reg_out[A] in seen:
+                    print( f"\nPart 2: {previous}")
+                    exit(0)
+                previous = reg_out[A]
+                seen.add( reg_out[A] )
+                iterations += 1
             else:
                 reg_out[ C ] = 1 if reg_out[ A ] == B else 0
     # Total cheat:  this problem can't generate negative numbers, so just return a negative register if we encountered an invalid command for the instruction
@@ -109,7 +127,6 @@ def main():
 # put your own input in [2] and then just modify the program to jump to 1 instead of 16 and let the fun begin
 # to see inputs, modify the second line of the program to jump out of bounds
     part( ip_shadow, program, [0,0,0,0,0,0] )
-    part( ip_shadow, program, [1,0,0,0,0,0] )
 
 
 if __name__ == "__main__":
